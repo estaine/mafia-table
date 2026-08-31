@@ -1,0 +1,3266 @@
+<!DOCTYPE html>
+<html lang="be">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Стол мафіі</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
+  <style>
+    :root {
+      --bg: #12140f;
+      --panel: #1b1f16;
+      --panel-2: #23281c;
+      --ink: #efe7d2;
+      --muted: #9a9178;
+      --line: #3a3f2f;
+      --accent: #e2b13c;
+      --accent-dim: #8a6d1f;
+      --town: #c9d4a8;
+      --black: #c45c4a;
+      --danger: #d45a4a;
+      --ok: #7fb069;
+      --seat: #2a3020;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: radial-gradient(1200px 600px at 50% -10%, #2a321c 0%, var(--bg) 55%);
+      color: var(--ink);
+      font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    }
+
+    button, input {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 12px;
+      padding: 0.7rem 1rem;
+    }
+
+    button:hover { border-color: var(--accent-dim); }
+    button[disabled] { opacity: 0.35; cursor: not-allowed; }
+
+    button.primary {
+      background: var(--accent);
+      color: #1a1406;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    input {
+      background: #10140c;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      width: 100%;
+    }
+
+    .lang-bar {
+      position: fixed;
+      top: 0.55rem;
+      right: 0.85rem;
+      z-index: 8;
+    }
+
+    .lang-bar .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-height: 2.15rem;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    .lang-bar .lang-toggle svg {
+      width: 0.7rem;
+      height: 0.7rem;
+      display: block;
+    }
+
+    .lang-bar.is-open .lang-toggle svg { transform: rotate(180deg); }
+
+    .lang-menu {
+      position: absolute;
+      top: calc(100% + 0.25rem);
+      right: 0;
+      min-width: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .lang-menu[hidden] { display: none; }
+
+    .lang-menu button {
+      min-height: 2.15rem;
+      padding: 0.35rem 0.7rem;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-align: left;
+    }
+
+    .lang-menu button.is-on,
+    .lang-menu button:hover {
+      background: var(--panel-2);
+      color: var(--accent);
+    }
+
+    .shell {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding: 3rem 1.2rem 6.4rem;
+    }
+
+    .shell.has-night-music { padding-bottom: 22rem; }
+
+    .night-music {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(4.55rem + env(safe-area-inset-bottom));
+      z-index: 3;
+      padding: 0.45rem 0.65rem 0.5rem;
+      background: var(--bg);
+      border-top: 1px solid var(--line);
+    }
+
+    .night-music[hidden] { display: none; }
+
+    .night-music .empty {
+      margin: 0.2rem 0.2rem 0.4rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .night-music .aplayer {
+      margin: 0;
+      box-shadow: none;
+      background: var(--panel);
+      color: var(--ink);
+      font-family: inherit;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .night-music .player-panel { position: relative; }
+
+    .night-music .aplayer .aplayer-info {
+      position: relative;
+      padding: 8px 26% 2.15rem 10px;
+      height: auto !important;
+      min-height: 66px;
+      border-color: var(--line);
+    }
+
+    .night-music .aplayer .aplayer-info .aplayer-music {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: auto;
+      margin-bottom: 4px;
+      overflow: hidden;
+    }
+
+    .night-music .aplayer .aplayer-info .aplayer-music .aplayer-title,
+    .night-music .aplayer .aplayer-info .aplayer-music .aplayer-author {
+      display: block;
+      width: 100%;
+      height: auto;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .night-music .aplayer .aplayer-info .aplayer-music .aplayer-title { color: var(--ink); }
+    .night-music .aplayer .aplayer-info .aplayer-music .aplayer-author {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 0.1rem;
+    }
+    .night-music .aplayer .aplayer-info .aplayer-controller {
+      position: absolute;
+      left: -58px;
+      right: 8px;
+      bottom: 6px;
+    }
+
+    .night-music .aplayer .aplayer-info .aplayer-controller .aplayer-time { color: var(--muted); }
+
+    .night-music .aplayer .aplayer-volume-wrap { display: none !important; }
+
+    .night-volume {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      width: 23%;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .night-volume .spk {
+      flex-shrink: 0;
+      width: 1.2rem;
+      height: 1.2rem;
+      padding: 0;
+      border: none;
+      background: none;
+      color: var(--muted);
+      border-radius: 0;
+    }
+
+    .night-volume .spk svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .night-volume .spk .wave,
+    .night-volume .spk .cross { display: none; }
+    .night-volume .spk.lvl-1 .w1,
+    .night-volume .spk.lvl-2 .w1,
+    .night-volume .spk.lvl-2 .w2,
+    .night-volume .spk.lvl-3 .w1,
+    .night-volume .spk.lvl-3 .w2,
+    .night-volume .spk.lvl-3 .w3 { display: block; }
+    .night-volume .spk.lvl-0 .cross { display: block; }
+
+    .night-volume input[type="range"] {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      height: 14px;
+      border: none;
+      outline: none;
+      background: transparent;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .night-volume input[type="range"]::-webkit-slider-runnable-track {
+      -webkit-appearance: none;
+      height: 3px;
+      border: none;
+      border-radius: 99px;
+      background: linear-gradient(to right, var(--accent) var(--vol, 80%), #5c5644 var(--vol, 80%));
+    }
+
+    .night-volume input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px;
+      height: 10px;
+      margin-top: -3.5px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: none;
+    }
+
+    .night-volume input[type="range"]::-moz-range-track {
+      height: 3px;
+      border: none;
+      border-radius: 99px;
+      background: #5c5644;
+    }
+
+    .night-volume input[type="range"]::-moz-range-progress {
+      height: 3px;
+      border: none;
+      border-radius: 99px;
+      background: var(--accent);
+    }
+
+    .night-volume input[type="range"]::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .night-music .aplayer .aplayer-info .aplayer-controller .aplayer-bar-wrap .aplayer-bar {
+      background: #3a3f2f;
+    }
+    .night-music .aplayer .aplayer-list {
+      background: var(--panel);
+    }
+    .night-music .aplayer .aplayer-list ol li {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.5rem 1fr;
+      grid-template-rows: auto auto;
+      column-gap: 0.25rem;
+      row-gap: 0.1rem;
+      align-items: center;
+      height: auto;
+      min-height: 0;
+      line-height: 1.15;
+      padding: 0.35rem 0.55rem 0.35rem 0.75rem;
+      border-top-color: var(--line);
+      color: var(--ink);
+      white-space: normal;
+    }
+
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-cur {
+      display: none !important;
+    }
+
+    .night-music .aplayer .aplayer-list ol li.aplayer-list-light::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+    }
+
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-index {
+      grid-row: 1 / 3;
+      align-self: center;
+    }
+
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-title,
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-author {
+      grid-column: 2;
+      float: none;
+      display: block;
+      max-width: none;
+      height: auto;
+      line-height: 1.15;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-author {
+      font-size: 0.82rem;
+      margin-top: 0;
+    }
+    .night-music .aplayer .aplayer-list ol li:hover {
+      background: var(--panel-2);
+    }
+    .night-music .aplayer .aplayer-list ol li.aplayer-list-light {
+      background: #32361f;
+    }
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-author,
+    .night-music .aplayer .aplayer-list ol li .aplayer-list-index {
+      color: var(--muted);
+    }
+
+    .night-music.is-locked .aplayer-pic,
+    .night-music.is-locked .aplayer-icon-play,
+    .night-music.is-locked .aplayer-icon-pause {
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    .kicker {
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      margin: 0 0 0.35rem;
+    }
+
+    h1 {
+      margin: 0 0 0.45rem;
+      font-size: clamp(1.6rem, 5vw, 2.3rem);
+      font-weight: 700;
+      line-height: 1.15;
+    }
+
+    .lede {
+      margin: 0 0 1.2rem;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 34rem;
+    }
+
+    .content { flex: 1; }
+
+    .clock {
+      font-size: clamp(4rem, 18vw, 7rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      line-height: 0.9;
+      margin: 1.2rem 0 0.6rem;
+    }
+
+    .clock.low { color: var(--danger); }
+
+    .hero-seat {
+      font-size: clamp(3.2rem, 16vw, 6rem);
+      font-weight: 700;
+      line-height: 0.9;
+      color: var(--accent);
+    }
+
+    .hero-name {
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      margin: 0.25rem 0 0.8rem;
+    }
+
+    .speech-head {
+      display: flex;
+      align-items: baseline;
+      gap: 0.65rem 1rem;
+      margin: 0.15rem 0 0.55rem;
+      min-height: 4.2rem;
+    }
+
+    .speech-head .hero-seat,
+    .speech-head .hero-name,
+    .speech-head .clock {
+      font-size: clamp(2.5rem, 8.75vw, 3.75rem);
+    }
+
+    .speech-head .hero-seat {
+      flex-shrink: 0;
+    }
+
+    .speech-head .hero-name {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+    }
+
+    .speech-head .hero-name .nm-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .speech-head .clock {
+      margin: 0;
+      flex-shrink: 0;
+    }
+
+    .speech-head .clock.is-hidden { visibility: hidden; }
+
+    .speech-status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 3.6rem;
+      margin: 0.8rem 0 1.1rem;
+      padding: 0.7rem 1rem;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 12px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .speech-acts .main-act { margin: 0 0 0.7rem; }
+
+    .nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0.7rem 1rem calc(0.9rem + env(safe-area-inset-bottom));
+      pointer-events: none;
+      background: linear-gradient(to top, var(--bg) 55%, transparent);
+    }
+
+    .nav button {
+      pointer-events: auto;
+      min-width: 6.4rem;
+      min-height: 3.4rem;
+      font-size: 1.05rem;
+    }
+
+    .nav .next {
+      min-width: 7.4rem;
+      min-height: 3.8rem;
+      font-size: 1.15rem;
+    }
+
+    .nav .why {
+      pointer-events: none;
+      position: absolute;
+      right: 1.2rem;
+      bottom: calc(4.7rem + env(safe-area-inset-bottom));
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .reg-row {
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      gap: 0.55rem;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .reg-row .n {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .reg-pick { position: relative; }
+
+    .suggest {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% - 2px);
+      z-index: 8;
+      max-height: 12.5rem;
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-top: none;
+      border-radius: 0 0 10px 10px;
+    }
+
+    .suggest button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      border: none;
+      border-radius: 0;
+      padding: 0.5rem 0.8rem;
+      background: transparent;
+    }
+
+    .suggest button.is-on,
+    .suggest button:hover {
+      background: var(--panel-2);
+      color: var(--accent);
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .role-grid button {
+      min-height: 5.2rem;
+      font-size: 1.2rem;
+      text-align: left;
+      padding: 0.85rem 1rem;
+    }
+
+    .role-grid button .left {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 0.2rem;
+    }
+
+    .role-grid button.picked {
+      background: var(--accent);
+      color: #1a1406;
+      border-color: var(--accent);
+    }
+
+    .role-map {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.5rem;
+      margin-top: 2.8rem;
+    }
+
+    .role-cell {
+      position: relative;
+      aspect-ratio: 1;
+      min-height: 0;
+      padding: 0;
+      border-radius: 10px;
+      background: var(--seat);
+      border: 2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .role-cell.pending { opacity: 0.5; }
+
+    .role-cell.current {
+      border-width: 4px;
+      border-color: var(--accent);
+    }
+
+    .role-cell.filled {
+      background: #d8d0b4;
+    }
+
+    .role-cell-n {
+      position: absolute;
+      top: 0.22rem;
+      left: 0.32rem;
+      font-size: 1.02rem;
+      line-height: 1;
+      color: var(--muted);
+    }
+
+    .role-cell.filled .role-cell-n { color: #5c5644; }
+
+    .role-cell-l {
+      font-size: clamp(3.125rem, 11.25vw, 4.625rem);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .role-cell-l.is-wide {
+      font-size: clamp(2.1rem, 7.5vw, 3.1rem);
+    }
+
+    .role-cell.red .role-cell-l { color: #c43a2e; }
+    .role-cell.black .role-cell-l { color: #1a1406; }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 2rem minmax(0, 1fr) auto 7.25rem;
+      gap: 0.45rem;
+      align-items: center;
+      padding: 0.45rem 0.5rem;
+      border-radius: 10px;
+      margin-bottom: 0.28rem;
+      background: var(--seat);
+      border: 1px solid transparent;
+    }
+
+    .player-row.dead { opacity: 0.38; }
+    .player-row.speak { border-color: var(--accent); background: #32361f; }
+    .player-row.nom { border-color: var(--accent-dim); }
+    .player-row.foulable { cursor: pointer; }
+
+    .player-row .n { font-weight: 700; color: var(--accent); }
+    .player-row .nm {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      min-width: 0;
+    }
+    .player-row .nm .nm-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mute-ico {
+      display: inline-flex;
+      flex-shrink: 0;
+      align-items: center;
+      color: var(--muted);
+    }
+    .mute-ico svg {
+      width: 1.05em;
+      height: 1.05em;
+      display: block;
+    }
+
+    .dots {
+      display: flex;
+      gap: 5px;
+      padding: 0.25rem;
+    }
+
+    .dot {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border-radius: 50%;
+      border: 1px solid var(--accent-dim);
+      background: transparent;
+    }
+
+    .dot.on { background: var(--accent); }
+
+    .player-row .dots { justify-self: end; }
+
+    .chip,
+    .chip-slot {
+      width: 100%;
+      justify-self: stretch;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 0.22rem 0.4rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--accent-dim);
+      background: #1c2016;
+      color: var(--accent);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .chip.on,
+    .chip.on:disabled {
+      color: #1a1406;
+      background: var(--accent);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .chip:disabled {
+      opacity: 1;
+      cursor: default;
+      color: var(--accent);
+      border-color: var(--accent-dim);
+      background: #1c2016;
+    }
+
+    .ballot {
+      margin: 0.9rem 0 1.2rem;
+      padding: 0.85rem 1rem;
+      background: var(--seat);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+
+    .ballot .kind {
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      margin: 0 0 1.15rem;
+    }
+
+    .ballot-row {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.7rem 0.55rem;
+    }
+
+    .ballot-seat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      min-width: 0;
+      width: auto;
+    }
+
+    .ballot-seat .circ {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .ballot-seat .who {
+      font-size: 1.02rem;
+      line-height: 1.2;
+      width: 100%;
+      height: 3.6em;
+      text-align: center;
+      overflow: hidden;
+      overflow-wrap: break-word;
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+    }
+
+    .ballot-seat.now .circ {
+      background: var(--accent);
+      color: #1a1406;
+      border-color: var(--accent);
+    }
+
+    .ballot-seat.now .who { color: var(--accent); }
+
+    button.ballot-seat {
+      background: none;
+      color: inherit;
+      font: inherit;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      min-height: 0;
+      box-shadow: none;
+    }
+
+    button.ballot-seat:hover { border-color: transparent; }
+
+    .ballot-seat.pick .circ {
+      border-width: 4px;
+    }
+
+    .ballot .empty {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .main-act {
+      width: 100%;
+      margin: 0.8rem 0 1.1rem;
+      min-height: 3.6rem;
+      font-size: 1.15rem;
+    }
+
+    .vote-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--seat);
+      border: 3px solid transparent;
+      border-radius: 14px;
+      padding: 0.45rem 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .vote-row.current { border-color: var(--accent); }
+    .vote-row.pending { opacity: 0.42; }
+
+    .vote-row .who {
+      flex: 0 0 20ch;
+      width: 20ch;
+      max-width: 20ch;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 1rem;
+    }
+
+    .vote-row .who .vote-n { font-weight: 700; }
+
+    .vote-picks {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+      gap: 0.28rem;
+      margin-left: auto;
+      flex: 0 0 auto;
+    }
+
+    .vote-picks button {
+      flex: 0 0 2.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .vote-picked {
+      margin-left: auto;
+      min-width: 2rem;
+      text-align: right;
+      font-size: 1.6rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stepper { display: flex; align-items: center; gap: 0.45rem; margin-left: auto; }
+
+    .stepper button {
+      width: 3.2rem;
+      height: 3.2rem;
+      font-size: 1.6rem;
+      padding: 0;
+    }
+
+    .stepper .n {
+      min-width: 2.2rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .call {
+      margin: 1rem 0 0;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid var(--accent);
+      background: #10140c;
+      border-radius: 0 12px 12px 0;
+      font-size: 1.15rem;
+      line-height: 1.35;
+    }
+
+    .pick-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+
+    @media (max-width: 720px) {
+      .pick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .pick-grid button {
+      min-height: 4.6rem;
+      text-align: left;
+    }
+
+    .pick-grid button.chosen {
+      background: var(--accent);
+      color: #1a1406;
+      border-color: var(--accent);
+    }
+
+    .pick-grid button.gone { opacity: 0.42; }
+    .pick-grid button:disabled { cursor: not-allowed; opacity: 0.32; }
+
+    .pick-grid button.miss {
+      grid-column: 1 / -1;
+      min-height: 4rem;
+      text-align: center;
+      font-size: 1.3rem;
+    }
+
+    .result {
+      margin-top: 1rem;
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .result.black { color: var(--black); }
+    .result.ok { color: var(--ok); }
+
+    .tiny {
+      margin-top: 1.2rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 0;
+      font-size: 0.85rem;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="lang-bar" id="lang-bar"></div>
+  <div class="shell">
+    <div class="content" id="view"></div>
+  </div>
+  <div id="night-music" class="night-music" hidden>
+    <p class="empty" id="night-empty" hidden></p>
+    <div class="player-panel">
+      <div class="night-volume">
+        <button type="button" class="spk lvl-3" id="night-speaker" title="">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9v6h3.5L12 19V5L7.5 9H4z" fill="currentColor" stroke="none"/>
+            <path class="wave w1" d="M15 9.6a3.2 3.2 0 0 1 0 4.8"/>
+            <path class="wave w2" d="M17.2 7.6a6 6 0 0 1 0 8.8"/>
+            <path class="wave w3" d="M19.4 5.7a8.8 8.8 0 0 1 0 12.6"/>
+            <path class="cross" d="M15.2 9.2l5.6 5.6M20.8 9.2l-5.6 5.6"/>
+          </svg>
+        </button>
+        <input id="night-volume" type="range" min="0" max="100" value="80" />
+      </div>
+      <div id="aplayer"></div>
+    </div>
+  </div>
+  <div class="nav" id="nav"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+  <script>
+    let roster = [];
+
+    const LANGS = [
+      { id: "be", tag: "BY" },
+      { id: "uk", tag: "UA" },
+      { id: "en", tag: "EN" },
+    ];
+
+    const I18N = {
+      be: {
+        app_title: "Стол мафіі",
+        before_sleep: "Рэгістрацыя",
+        who_at_table: "Хто за сталом?",
+        write_ten: "",
+        name_ph: "Імя",
+        random_nicks: "Выпадковыя нікі",
+        sample_names: "Запоўніць выпадковымі",
+        roles_of: "Ролі · {n} з 10",
+        what_draw: "Што выцягнулі?",
+        theirs: "іх",
+        left_n: "{n} засталося",
+        city_asleep: "У горадзе глыбокая ноч",
+        mafia_find: "Прачынаецца мафія",
+        mafia_lede: "У мафіі хвіліна на дамоўку",
+        play: "Пуск",
+        still_night: "Ноч",
+        sheriff_show: "Шэрыф абазначае сябе жэстам",
+        sheriff_show_lede: "",
+        good_morning: "Ноч сканчваецца",
+        sit_twenty: "Дваццаць секунд — вольная пасадка",
+        sit_lede: "Можна танчыць, нельга дакранацца да іншых і да маскі.",
+        everyone_spoken: "Усе выказаліся",
+        next_speaker: "Наступны · {seat} {name}",
+        day_n: "Дзень {n}",
+        no_speech: "без прамовы",
+        the_floor: "Прамовы",
+        skip_lede: "Тры фолы — не гавораць. Могуць выставіць кандыдата і сесці.",
+        foul_lede: "Націсніце на гульца, каб даць фол. Націсніце на сам фол, каб адмяніць яго.",
+        first_vote: "Выстаўленыя",
+        day_vote: "Дзень {n} · галасаванне",
+        no_one_named: "Нікога не назвалі.",
+        city_sleeps_now: "Горад засынае.",
+        hands_each: "Галасаванне",
+        vote_lede: "",
+        another_word: "Паўторнае галасаванне",
+        another_30: "Дзень {n} · паўторныя прамовы",
+        tied_lede: "Толькі тыя, хто ў нічыёй. Той самы парадак выстаўлення. Па адным слове.",
+        vote_again: "Дзень {n} · паўторнае галасаванне",
+        hands_once: "Галасаванне",
+        repeat_noms: "Паўторнае галасаванне · Кандыдаты",
+        last_question: "Апошняе пытанне",
+        lift_kicker: "Дзень {n} · паўторнае галасаванне · Пад'ём",
+        do_they_all: "Пад'ём",
+        half_yes: "Для пад'ёму патрэбна {need} галасоў",
+        yes: "Так",
+        night: "Ноч",
+        night_city: "Ноч у горадзе",
+        eyes_closed: "Вочы заплюшчаныя. Ніхто не гаворыць.",
+        still_asleep: "Горад працягвае спаць. Раніца ўжо блізка.",
+        night_shot: "Ноч · стрэл",
+        who_shot: "Каго забіла мафія?",
+        shoot_lede: "Усе чорныя мусяць страляць у аднаго і таго ж гульца, каб трапіць.<br>Калі хтосьці з жывых чорных стрэліў не разам з астатнімі, стрэліў больш за адзін раз ці не стрэліў увогуле — промах.",
+        miss: "Промах",
+        night_don: "Ноч · праверка дона",
+        don_looks: "Дон шукае шэрыфа",
+        don_lede: "Дон можа праверыць любога гульца, у тым ліку тых, што ўжо сышоў са стала.",
+        they_sheriff: "👌 Шэрыф",
+        not_sheriff: "❌ Не шэрыф",
+        night_sheriff: "Ноч · праверка шэрыфа",
+        sheriff_check: "Шэрыф горада шукае мафію",
+        sheriff_lede: "Шэрыф можа праверыць любога гульца, у тым ліку тых, што ўжо сышоў са стала.",
+        color_black: "👎 Чорны",
+        color_red: "👍 Чырвоны",
+        first_morning: "Дзень {n} · раніца",
+        names_three: "{name}, ваш лепшы ход",
+        guess_lede: "Запішыце тройку чорных на вашую думку.",
+        last_word: "Дзень {n} · апошняе слова",
+        morning_last_word: "Дзень {n} · раніца · апошняе слова",
+        goodbye: "Развітальная хвіліна",
+        table_over: "Стоп-гульня",
+        city_holds: "Перамога мірнага горада",
+        mafia_takes: "Перамога мафіі",
+        and: "і",
+        over_mafia: "Мафія — гульцы {names}",
+        over_mafia_one: "Мафія — гулец {names}",
+        over_don: "Дон — гулец {name}",
+        over_sheriff: "Шэрыф — гулец {name}",
+        start: "Старт",
+        thats_it: "Канец",
+        nominate: "Выставіць",
+        on_ballot: "Выстаўлены",
+        back: "Назад",
+        next: "Далей",
+        new_table: "Новы стол",
+        give_roles: "Спачатку раздайце ўсім ролі.",
+        everyone_speak: "Усе яшчэ павінны выказацца.",
+        count_hands: "Спачатку палічыце рукі.",
+        no_noms_night: "Нікога не выставілі. Значыць, ноч.",
+        how_many_hands: "Колькі рук за вылучанае імя?",
+        vote_stopped: "Галасаванне спынена. Сёння са стала сыходзяць толькі за чацвёрты фол.",
+        majority_leaves: "{name} набірае большасць галасоў і сыходзіць са стала",
+        needs_hands: "{name} патрэбна {need} рук. Застаецца.",
+        no_hands_night: "Рук яшчэ няма. Значыць, ноч.",
+        alone_leaves: "{name} набірае большасць галасоў і сыходзіць са стала",
+        tied_revote: "Некалькі гульцоў набралі аднолькавую колькасць галасоў і атрымліваюць права на паўторную прамову працягласцю 30 секунд.",
+        no_hands_stay: "Рук яшчэ няма. Застаюцца.",
+        same_top: "Тыя самыя гульцы зноў набралі аднолькавую колькасць галасоў.",
+        different_top: "Іншы набор гульцоў набраў аднолькавую колькасць галасоў і атрымлівае права на паўторную прамову працягласцю 30 секунд",
+        all_yes: "Больш за палову гульцоў падтрымалі пад'ём. Усе кандыдаты сыходзяць са стала.",
+        need_yeses: "{n} галасоў, гэтага недастаткова. У горадзе надыходзіць ноч",
+        need_one_vote: "Патрэбен хаця б адзін голас.",
+        player_n: "Гулец {n}",
+        role_don: "Дон",
+        role_mafia: "Мафія",
+        role_sheriff: "Шэрыф",
+        role_civilian: "Мірны",
+        letter_civilian: "М",
+        letter_mafia: "Мф",
+        letter_don: "Д",
+        letter_sheriff: "Ш",
+        out: "выбыў",
+        out_vote: "галасаванне",
+        out_fouls: "фолы",
+        out_night: "ноч",
+        no_one_nominated: "Нікога не выставілі.",
+        skip_title: "Прапускае наступнае слова",
+        upload_mp3: "Загрузіце .mp3 у бакет music на Supabase і абнавіце старонку.",
+        mute: "Выключыць гук",
+        unmute: "Уключыць гук",
+        reading_tracks: "Чытаю трэкі…",
+        remove_foul: "Зняць фол",
+      },
+      uk: {
+        app_title: "Стіл мафії",
+        before_sleep: "Реєстрація",
+        who_at_table: "Хто за столом?",
+        write_ten: "",
+        name_ph: "Ім’я",
+        random_nicks: "Випадкові ніки",
+        sample_names: "Заповнити випадковими",
+        roles_of: "Ролі · {n} з 10",
+        what_draw: "Що витягнули?",
+        theirs: "їхнє",
+        left_n: "{n} лишилось",
+        city_asleep: "У місті глибока ніч",
+        mafia_find: "Прокидається мафія",
+        mafia_lede: "У мафії хвилина на домовленість",
+        play: "Пуск",
+        still_night: "Ніч",
+        sheriff_show: "Шериф позначає себе жестом",
+        sheriff_show_lede: "",
+        good_morning: "Ніч закінчується",
+        sit_twenty: "Двадцять секунд — вільна посадка",
+        sit_lede: "Можна танцювати, не можна торкатися інших і маски.",
+        everyone_spoken: "Усі висловились",
+        next_speaker: "Наступний · {seat} {name}",
+        day_n: "День {n}",
+        no_speech: "без промови",
+        the_floor: "Промови",
+        skip_lede: "Три фоли — не говорять. Можуть виставити кандидата і сісти.",
+        foul_lede: "Натисніть на гравця, щоб дати фол. Натисніть на сам фол, щоб скасувати його.",
+        first_vote: "Виставлені",
+        day_vote: "День {n} · голосування",
+        no_one_named: "Нікого не назвали.",
+        city_sleeps_now: "Місто засинає.",
+        hands_each: "Голосування",
+        vote_lede: "",
+        another_word: "Повторне голосування",
+        another_30: "День {n} · повторні промови",
+        tied_lede: "Лише ті, хто в нічиїй. Той самий порядок виставлення. По одному слову.",
+        vote_again: "День {n} · повторне голосування",
+        hands_once: "Голосування",
+        repeat_noms: "Повторне голосування · Кандидати",
+        last_question: "Останнє питання",
+        lift_kicker: "День {n} · повторне голосування · Підйом",
+        do_they_all: "Підйом",
+        half_yes: "Для підйому потрібно {need} голосів",
+        yes: "Так",
+        night: "Ніч",
+        night_city: "Ніч у місті",
+        eyes_closed: "Очі заплющені. Ніхто не говорить.",
+        still_asleep: "Місто продовжує спати. Ранок уже близько.",
+        night_shot: "Ніч · стріл",
+        who_shot: "Кого вбила мафія?",
+        shoot_lede: "Усі чорні мають стріляти в одного й того самого гравця, щоб влучити.<br>Якщо хтось із живих чорних вистрілив не разом з іншими, вистрілив більше ніж один раз або не вистрілив взагалі — промах.",
+        miss: "Промах",
+        night_don: "Ніч · перевірка дона",
+        don_looks: "Дон шукає шерифа",
+        don_lede: "Дон може перевірити будь-якого гравця, зокрема тих, хто вже пішов зі столу.",
+        they_sheriff: "👌 Шериф",
+        not_sheriff: "❌ Не шериф",
+        night_sheriff: "Ніч · перевірка шерифа",
+        sheriff_check: "Шериф міста шукає мафію",
+        sheriff_lede: "Шериф може перевірити будь-якого гравця, зокрема тих, хто вже пішов зі столу.",
+        color_black: "👎 Чорний",
+        color_red: "👍 Червоний",
+        first_morning: "День {n} · ранок",
+        names_three: "{name}, ваш найкращий хід",
+        guess_lede: "Запишіть трійку чорних на вашу думку.",
+        last_word: "День {n} · останнє слово",
+        morning_last_word: "День {n} · ранок · останнє слово",
+        goodbye: "Прощальна хвилина",
+        table_over: "Стоп-гра",
+        city_holds: "Перемога мирного міста",
+        mafia_takes: "Перемога мафії",
+        and: "і",
+        over_mafia: "Мафія — гравці {names}",
+        over_mafia_one: "Мафія — гравець {names}",
+        over_don: "Дон — гравець {name}",
+        over_sheriff: "Шериф — гравець {name}",
+        start: "Старт",
+        thats_it: "Кінець",
+        nominate: "Виставити",
+        on_ballot: "Виставлений",
+        back: "Назад",
+        next: "Далі",
+        new_table: "Новий стіл",
+        give_roles: "Спочатку роздайте всім ролі.",
+        everyone_speak: "Усі ще мають висловитися.",
+        count_hands: "Спочатку порахуйте руки.",
+        no_noms_night: "Нікого не виставили. Отже, ніч.",
+        how_many_hands: "Скільки рук за виділене ім’я?",
+        vote_stopped: "Голосування зупинено. Сьогодні зі столу йдуть лише за четвертий фол.",
+        majority_leaves: "{name} набирає більшість голосів і йде зі столу",
+        needs_hands: "{name} потрібно {need} рук. Залишається.",
+        no_hands_night: "Рук ще немає. Отже, ніч.",
+        alone_leaves: "{name} набирає більшість голосів і йде зі столу",
+        tied_revote: "Кілька гравців набрали однакову кількість голосів і отримують право на повторну промову тривалістю 30 секунд.",
+        no_hands_stay: "Рук ще немає. Залишаються.",
+        same_top: "Ті самі гравці знову набрали однакову кількість голосів.",
+        different_top: "Інший набір гравців набрав однакову кількість голосів і отримує право на повторну промову тривалістю 30 секунд",
+        all_yes: "Більше ніж половина гравців підтримали підйом. Усі кандидати йдуть зі столу.",
+        need_yeses: "{n} голосів, цього недостатньо. У місті настає ніч",
+        need_one_vote: "Потрібен хоча б один голос.",
+        player_n: "Гравець {n}",
+        role_don: "Дон",
+        role_mafia: "Мафія",
+        role_sheriff: "Шериф",
+        role_civilian: "Мирний",
+        letter_civilian: "М",
+        letter_mafia: "Мф",
+        letter_don: "Д",
+        letter_sheriff: "Ш",
+        out: "вибув",
+        out_vote: "голосування",
+        out_fouls: "фоли",
+        out_night: "ніч",
+        no_one_nominated: "Нікого не виставили.",
+        skip_title: "Пропускає наступне слово",
+        upload_mp3: "Завантажте .mp3 у бакет music на Supabase і оновіть сторінку.",
+        mute: "Вимкнути звук",
+        unmute: "Увімкнути звук",
+        reading_tracks: "Читаю треки…",
+        remove_foul: "Зняти фол",
+      },
+      en: {
+        app_title: "Mafia Table",
+        before_sleep: "Registration",
+        who_at_table: "Who is at the table?",
+        write_ten: "",
+        name_ph: "Name",
+        random_nicks: "Random nicknames",
+        sample_names: "Fill with random names",
+        roles_of: "Roles · {n} of 10",
+        what_draw: "What did they draw?",
+        theirs: "theirs",
+        left_n: "{n} left",
+        city_asleep: "Deep night in the city",
+        mafia_find: "Mafia wakes",
+        mafia_lede: "Mafia has a minute to confer",
+        play: "Play",
+        still_night: "Night",
+        sheriff_show: "The Sheriff marks themselves with a gesture",
+        sheriff_show_lede: "",
+        good_morning: "Night is ending",
+        sit_twenty: "Twenty seconds — free seating",
+        sit_lede: "You may dance. Do not touch others or the mask.",
+        everyone_spoken: "Everyone has spoken",
+        next_speaker: "Next speaker · {seat} {name}",
+        day_n: "Day {n}",
+        no_speech: "no speech",
+        the_floor: "Speeches",
+        skip_lede: "Three fouls — they don't speak. They may nominate someone, then sit down.",
+        foul_lede: "Tap a player for a foul. Tap the foul itself to cancel it.",
+        first_vote: "Nominated",
+        day_vote: "Day {n} · vote",
+        no_one_named: "No one was named.",
+        city_sleeps_now: "The city goes to sleep.",
+        hands_each: "Voting",
+        vote_lede: "",
+        another_word: "Repeat voting",
+        another_30: "Day {n} · repeat speeches",
+        tied_lede: "Only the names still tied. Same order they were nominated. One turn each.",
+        vote_again: "Day {n} · repeat voting",
+        hands_once: "Voting",
+        repeat_noms: "Repeat voting · Candidates",
+        last_question: "The last question",
+        lift_kicker: "Day {n} · repeat voting · Lift",
+        do_they_all: "Lift",
+        half_yes: "A lift needs {need} votes",
+        yes: "Yes",
+        night: "Night",
+        night_city: "Night in the city",
+        eyes_closed: "Eyes closed. Nobody speaks.",
+        still_asleep: "The city is still asleep. Morning is already close.",
+        night_shot: "Night · shot",
+        who_shot: "Who did the mafia kill?",
+        shoot_lede: "All blacks must shoot the same player to hit.<br>If any living black shoots out of time, shoots more than once, or does not shoot — it is a miss.",
+        miss: "Miss",
+        night_don: "Night · Don check",
+        don_looks: "The Don is looking for the Sheriff",
+        don_lede: "The Don may check any player, including those who have already left the table.",
+        they_sheriff: "👌 Sheriff",
+        not_sheriff: "❌ Not the Sheriff",
+        night_sheriff: "Night · Sheriff check",
+        sheriff_check: "The city sheriff is looking for mafia",
+        sheriff_lede: "The Sheriff may check any player, including those who have already left the table.",
+        color_black: "👎 Black",
+        color_red: "👍 Red",
+        first_morning: "Day {n} · morning",
+        names_three: "{name}, your best move",
+        guess_lede: "Write down the three blacks you think it is.",
+        last_word: "Day {n} · last word",
+        morning_last_word: "Day {n} · morning · last word",
+        goodbye: "Farewell minute",
+        table_over: "Stop game",
+        city_holds: "Victory for the peaceful city",
+        mafia_takes: "Mafia victory",
+        and: "and",
+        over_mafia: "Mafia — players {names}",
+        over_mafia_one: "Mafia — player {names}",
+        over_don: "Don — player {name}",
+        over_sheriff: "Sheriff — player {name}",
+        start: "Start",
+        thats_it: "End",
+        nominate: "Nominate",
+        on_ballot: "Nominated",
+        back: "Back",
+        next: "Next",
+        new_table: "New table",
+        give_roles: "Give everyone a role first.",
+        everyone_speak: "Everyone still has to speak.",
+        count_hands: "Count the hands first.",
+        no_noms_night: "No one was nominated. Night, then.",
+        how_many_hands: "How many hands for the highlighted name?",
+        vote_stopped: "Voting stopped. Today people only leave for a fourth foul.",
+        majority_leaves: "{name} has a majority of the votes and leaves the table",
+        needs_hands: "{name} needs {need} hands. They stay.",
+        no_hands_night: "No hands yet. Night, then.",
+        alone_leaves: "{name} has a majority of the votes and leaves the table",
+        tied_revote: "Several players have the same number of votes and get a 30-second extra speech.",
+        no_hands_stay: "No hands yet. They stay.",
+        same_top: "The same players have tied again.",
+        different_top: "A different set of players has the same number of votes and gets a 30-second extra speech.",
+        all_yes: "More than half of the players supported the lift. All candidates leave the table.",
+        need_yeses: "{n} votes — not enough. Night is falling on the city.",
+        need_one_vote: "Need at least one vote.",
+        player_n: "Player {n}",
+        role_don: "Don",
+        role_mafia: "Mafia",
+        role_sheriff: "Sheriff",
+        role_civilian: "Civilian",
+        letter_civilian: "C",
+        letter_mafia: "M",
+        letter_don: "D",
+        letter_sheriff: "S",
+        out: "out",
+        out_vote: "vote",
+        out_fouls: "fouls",
+        out_night: "night",
+        no_one_nominated: "No one is nominated.",
+        skip_title: "Skips next speech",
+        upload_mp3: "Upload .mp3 files to the Supabase music bucket, then refresh.",
+        mute: "Mute",
+        unmute: "Unmute",
+        reading_tracks: "Reading tracks…",
+        remove_foul: "Remove foul",
+      },
+    };
+
+    let lang = "be";
+    try {
+      const saved = localStorage.getItem("mafia-lang");
+      if (saved && I18N[saved]) lang = saved;
+    } catch (err) { /* ignore */ }
+
+    const t = (key, vars) => {
+      const pack = I18N[lang] || I18N.be;
+      let s = pack[key] ?? I18N.be[key] ?? I18N.en[key] ?? key;
+      if (vars) {
+        Object.keys(vars).forEach((k) => { s = String(s).split("{" + k + "}").join(String(vars[k])); });
+      }
+      return s;
+    };
+
+    const Table = (() => {
+      const ROLE_CAPS = { don: 1, mafia: 2, sheriff: 1, civilian: 6 };
+      const emptyPlayer = (seat) => ({
+        seat, name: "", role: null, alive: true, fouls: 0, outReason: null, skipNextSpeech: false,
+      });
+
+      const create = () => ({
+        screen: "registration",
+        history: [],
+        dayNumber: 0,
+        lastOpener: 0,
+        opener: 1,
+        speaker: 1,
+        spoken: [],
+        speechGap: false,
+        speechesConfirmed: false,
+        repeatSpoken: [],
+        repeatSpeechGap: false,
+        repeatConfirmed: false,
+        repeatSpeaker: null,
+        roleSeat: 1,
+        players: Array.from({ length: 10 }, (_, i) => emptyPlayer(i + 1)),
+        nominations: [],
+        nominatedBy: {},
+        votes: {},
+        voteCursor: 0,
+        voteAutoFrom: null,
+        voteAborted: false,
+        lastLeaderSet: null,
+        repeatSeats: [],
+        allLeaveYes: null,
+        farewellQueue: [],
+        farewellAfter: null,
+        shoot: null,
+        miss: false,
+        donCheck: null,
+        donResult: null,
+        sheriffCheck: null,
+        sheriffResult: null,
+        morningGuess: [],
+        killedTonight: null,
+        winner: null,
+      });
+
+      const p = (s, seat) => s.players.find((x) => x.seat === seat);
+      const living = (s) => s.players.filter((x) => x.alive);
+      const skipsSpeech = (s, pl) => !!(pl && pl.alive && pl.skipNextSpeech && living(s).length > 4);
+      const nameOf = (pl) => pl.name.trim() || t("player_n", { n: pl.seat });
+      const isBlack = (role) => role === "don" || role === "mafia";
+      const isRed = (role) => role === "sheriff" || role === "civilian";
+      const majority = (n) => Math.floor(n / 2) + 1;
+      const label = (role) => (role ? t("role_" + role) : "—");
+
+      const nextLiving = (s, after) => {
+        for (let i = 1; i <= 10; i++) {
+          const seat = ((after - 1 + i) % 10) + 1;
+          if (p(s, seat).alive) return seat;
+        }
+        return after;
+      };
+
+      const remainingRoles = (s) => {
+        const left = { ...ROLE_CAPS };
+        s.players.forEach((pl) => { if (pl.role) left[pl.role] -= 1; });
+        return left;
+      };
+
+      const leadersOf = (votes, seats) => {
+        if (!seats.length) return [];
+        const max = Math.max(...seats.map((seat) => votes[seat] || 0));
+        if (max <= 0) return [];
+        return seats.filter((seat) => (votes[seat] || 0) === max);
+      };
+
+      const sameSet = (a, b) => {
+        if (!a || !b || a.length !== b.length) return false;
+        const x = [...a].sort((i, j) => i - j);
+        const y = [...b].sort((i, j) => i - j);
+        return x.every((v, i) => v === y[i]);
+      };
+
+      const nomOrder = (s, seats) => s.nominations.filter((seat) => seats.includes(seat) && p(s, seat).alive);
+
+      const winnerOf = (s) => {
+        const live = living(s);
+        const black = live.filter((x) => isBlack(x.role)).length;
+        if (black === 0) return "town";
+        if (black >= live.length - black) return "mafia";
+        return null;
+      };
+
+      const checkWin = (s) => {
+        const w = winnerOf(s);
+        if (!w) return false;
+        s.winner = w;
+        s.screen = "game_over";
+        return true;
+      };
+
+      const eliminate = (s, seat, reason) => {
+        const pl = p(s, seat);
+        if (!pl.alive) return;
+        pl.alive = false;
+        pl.outReason = reason;
+      };
+
+      const fillNames = (s) => {
+        s.players.forEach((pl) => { if (!pl.name.trim()) pl.name = t("player_n", { n: pl.seat }); });
+      };
+
+      const beginDay = (s) => {
+        s.dayNumber += 1;
+        s.opener = s.dayNumber === 1 ? nextLiving(s, 0) : nextLiving(s, s.lastOpener);
+        s.lastOpener = s.opener;
+        s.speaker = s.opener;
+        s.spoken = [];
+        s.speechGap = false;
+        s.speechesConfirmed = false;
+        s.nominations = [];
+        s.nominatedBy = {};
+        s.votes = {};
+        s.voteCursor = 0;
+        s.voteAutoFrom = null;
+        s.voteAborted = false;
+        s.lastLeaderSet = null;
+        s.repeatSeats = [];
+        s.allLeaveYes = null;
+        s.farewellQueue = [];
+        s.farewellAfter = null;
+        s.repeatSpeaker = null;
+        s.repeatSpoken = [];
+        s.repeatSpeechGap = false;
+        s.repeatConfirmed = false;
+        s.shoot = null;
+        s.miss = false;
+        s.donCheck = null;
+        s.donResult = null;
+        s.sheriffCheck = null;
+        s.sheriffResult = null;
+        s.morningGuess = [];
+        s.killedTonight = null;
+        s.screen = "day_speech";
+      };
+
+      const goNight = (s) => {
+        s.votes = {};
+        s.voteAborted = false;
+        s.shoot = null;
+        s.miss = false;
+        s.donCheck = null;
+        s.donResult = null;
+        s.sheriffCheck = null;
+        s.sheriffResult = null;
+        s.screen = "city_sleeps";
+      };
+
+      const afterVoteOut = (s, seats, reason) => {
+        const order = nomOrder(s, seats);
+        seats.forEach((seat) => eliminate(s, seat, reason));
+        s.killedTonight = null;
+        s.farewellQueue = order.slice();
+        const w = winnerOf(s);
+        if (w) {
+          s.winner = w;
+          s.farewellAfter = "game_over";
+        } else {
+          s.farewellAfter = "night";
+        }
+        if (order.length) s.screen = "morning_farewell";
+        else if (s.farewellAfter === "game_over") s.screen = "game_over";
+        else goNight(s);
+      };
+
+      const livingNoms = (s) => s.nominations.filter((seat) => p(s, seat).alive);
+
+      const isVotePhase = (s) =>
+        s.screen === "day_voting" || s.screen === "repeat_speech" || s.screen === "repeat_voting" || s.screen === "all_leave";
+
+      const votingSeats = (s) => {
+        if (s.screen === "day_voting") return livingNoms(s);
+        if (s.screen === "repeat_voting") return nomOrder(s, s.repeatSeats);
+        return [];
+      };
+
+      const fillImpliedVotes = (s) => {
+        const seats = votingSeats(s);
+        const left = seats.length - s.voteCursor;
+        if (left <= 0) {
+          s.voteAutoFrom = null;
+          return;
+        }
+        const used = seats.slice(0, s.voteCursor).reduce((sum, seat) => sum + (s.votes[seat] || 0), 0);
+        const rest = Math.max(0, living(s).length - used);
+        if (left > 1 && rest > 0) {
+          s.voteAutoFrom = null;
+          return;
+        }
+        s.voteAutoFrom = s.voteCursor;
+        if (left === 1) s.votes[seats[s.voteCursor]] = rest;
+        else {
+          for (let i = s.voteCursor; i < seats.length; i++) s.votes[seats[i]] = 0;
+        }
+        s.voteCursor = seats.length;
+      };
+
+      const snapshot = (s) => {
+        const { history, ...rest } = s;
+        return structuredClone(rest);
+      };
+
+      const playCopy = (s) => {
+        const next = snapshot(s);
+        next.history = s.history;
+        return next;
+      };
+
+      const restore = (snap, history) => {
+        const s = structuredClone(snap);
+        s.history = history;
+        if (s.voteCursor == null) s.voteCursor = 0;
+        if (s.voteAborted == null) s.voteAborted = false;
+        if (!s.farewellQueue) s.farewellQueue = [];
+        return s;
+      };
+
+      const speechesOver = (s) =>
+        s.spoken.length > 0 && living(s).every((pl) => s.spoken.includes(pl.seat));
+
+      const nextUnspoken = (s, after) => {
+        for (let i = 1; i <= 10; i++) {
+          const seat = ((after - 1 + i) % 10) + 1;
+          if (p(s, seat).alive && !s.spoken.includes(seat)) return seat;
+        }
+        return null;
+      };
+
+      const repeatSpeechesOver = (s) => {
+        const seats = nomOrder(s, s.repeatSeats);
+        return s.repeatSpoken.length > 0 && seats.every((seat) => s.repeatSpoken.includes(seat));
+      };
+
+      const nextRepeatUnspoken = (s, after) => {
+        const order = nomOrder(s, s.repeatSeats);
+        if (!order.length) return null;
+        const start = Math.max(0, order.indexOf(after));
+        for (let i = 1; i <= order.length; i++) {
+          const seat = order[(start + i) % order.length];
+          if (p(s, seat).alive && !s.repeatSpoken.includes(seat)) return seat;
+        }
+        return null;
+      };
+
+      const resolveVote = (s, seats, isRepeat) => {
+        const lead = leadersOf(s.votes, seats);
+        if (!lead.length) return t("need_one_vote");
+        if (seats.length === 1 && !isRepeat) {
+          const need = majority(living(s).length);
+          if ((s.votes[seats[0]] || 0) >= need) afterVoteOut(s, seats, "vote");
+          else goNight(s);
+          return null;
+        }
+        if (lead.length === 1) {
+          afterVoteOut(s, lead, "vote");
+          return null;
+        }
+        if (!isRepeat) {
+          s.lastLeaderSet = lead.slice();
+          s.repeatSeats = lead.slice();
+          s.repeatSpeaker = nomOrder(s, lead)[0] || lead[0];
+          s.repeatSpoken = [];
+          s.repeatSpeechGap = false;
+          s.repeatConfirmed = false;
+          s.screen = "repeat_speech";
+          return null;
+        }
+        if (!sameSet(lead, s.lastLeaderSet)) {
+          s.lastLeaderSet = lead.slice();
+          s.repeatSeats = lead.slice();
+          s.repeatSpeaker = nomOrder(s, lead)[0] || lead[0];
+          s.repeatSpoken = [];
+          s.repeatSpeechGap = false;
+          s.repeatConfirmed = false;
+          s.screen = "repeat_speech";
+          return null;
+        }
+        s.repeatSeats = lead.slice();
+        s.allLeaveYes = null;
+        s.screen = "all_leave";
+        return null;
+      };
+
+      const applyMorning = (s) => {
+        if (s.killedTonight && s.dayNumber === 1) s.screen = "morning_guess";
+        else if (s.killedTonight) s.screen = "morning_farewell";
+        else beginDay(s);
+      };
+
+      const canGo = (s) => {
+        if (s.voteAborted) return null;
+        switch (s.screen) {
+          case "roles":
+            return s.players.every((pl) => pl.role) ? null : t("give_roles");
+          case "day_speech":
+            return s.speechesConfirmed ? null : t("everyone_speak");
+          case "repeat_speech":
+            return s.repeatConfirmed ? null : t("everyone_speak");
+          case "day_voting": {
+            const noms = livingNoms(s);
+            if (!noms.length) return null;
+            return s.voteCursor >= noms.length ? null : t("count_hands");
+          }
+          case "repeat_voting": {
+            const seats = votingSeats(s);
+            if (!seats.length) return null;
+            return s.voteCursor >= seats.length ? null : t("count_hands");
+          }
+          case "night_shoot":
+            return (s.miss || s.shoot != null) ? null : "Tap who was shot, or the miss.";
+          default:
+            return null;
+        }
+      };
+
+      const advance = (s) => {
+        const blocked = canGo(s);
+        if (blocked) return s;
+
+        if (s.voteAborted && isVotePhase(s)) {
+          goNight(s);
+          return s;
+        }
+
+        switch (s.screen) {
+          case "registration":
+            fillNames(s);
+            s.roleSeat = 1;
+            s.screen = "roles";
+            break;
+          case "roles":
+            s.screen = "mafia_agree";
+            break;
+          case "mafia_agree":
+            s.screen = "sheriff_show";
+            break;
+          case "sheriff_show":
+            s.screen = "free_sit";
+            break;
+          case "free_sit":
+            beginDay(s);
+            break;
+          case "day_speech":
+            s.votes = {};
+            s.voteCursor = 0;
+            s.voteAutoFrom = null;
+            s.screen = "day_voting";
+            break;
+          case "day_voting": {
+            const noms = livingNoms(s);
+            if (!noms.length) goNight(s);
+            else {
+              const err = resolveVote(s, noms, false);
+              if (err) return s;
+            }
+            break;
+          }
+          case "repeat_speech":
+            s.votes = {};
+            s.voteCursor = 0;
+            s.voteAutoFrom = null;
+            s.screen = "repeat_voting";
+            break;
+          case "repeat_voting": {
+            const seats = s.repeatSeats.filter((seat) => p(s, seat).alive);
+            const err = resolveVote(s, seats, true);
+            if (err) return s;
+            break;
+          }
+          case "all_leave": {
+            const seats = s.repeatSeats.filter((seat) => p(s, seat).alive);
+            if (s.allLeaveYes >= majority(living(s).length)) afterVoteOut(s, seats, "vote");
+            else goNight(s);
+            break;
+          }
+          case "city_sleeps":
+            s.screen = "night_shoot";
+            break;
+          case "night_shoot":
+            s.screen = "night_don";
+            break;
+          case "night_don":
+            s.screen = "night_sheriff";
+            break;
+          case "night_sheriff":
+            if (!s.miss && s.shoot != null && p(s, s.shoot).alive) {
+              eliminate(s, s.shoot, "night");
+              s.killedTonight = s.shoot;
+            } else {
+              s.killedTonight = null;
+            }
+            if (!checkWin(s)) s.screen = "city_still";
+            break;
+          case "city_still":
+            applyMorning(s);
+            break;
+          case "morning_guess":
+            s.screen = "morning_farewell";
+            break;
+          case "morning_farewell":
+            if (s.farewellQueue && s.farewellQueue.length) {
+              s.farewellQueue.shift();
+              if (s.farewellQueue.length) break;
+              const after = s.farewellAfter;
+              s.farewellAfter = null;
+              if (after === "game_over") s.screen = "game_over";
+              else goNight(s);
+              break;
+            }
+            s.killedTonight = null;
+            beginDay(s);
+            break;
+          default:
+            break;
+        }
+        return s;
+      };
+
+      const reduce = (state, action) => {
+        if (action.type === "RESET") return create();
+
+        if (action.type === "BACK") {
+          if (state.screen === "roles" && state.roleSeat > 1) {
+            const stay = playCopy(state);
+            stay.roleSeat -= 1;
+            return stay;
+          }
+          if ((state.screen === "day_voting" || state.screen === "repeat_voting") && state.voteCursor > 0) {
+            const stay = playCopy(state);
+            const rewind = stay.voteAutoFrom != null ? stay.voteAutoFrom : stay.voteCursor;
+            stay.voteCursor = Math.max(0, rewind - 1);
+            stay.voteAutoFrom = null;
+            votingSeats(stay).forEach((seat, i) => {
+              if (i >= stay.voteCursor) delete stay.votes[seat];
+            });
+            return stay;
+          }
+          if (!state.history.length) return state;
+          if (state.screen === "day_voting") {
+            for (let i = state.history.length - 1; i >= 0; i--) {
+              const snap = state.history[i];
+              if (snap.screen === "day_speech" && snap.speechesConfirmed) {
+                return restore(snap, state.history.slice(0, i));
+              }
+            }
+          }
+          if (state.screen === "repeat_voting") {
+            for (let i = state.history.length - 1; i >= 0; i--) {
+              const snap = state.history[i];
+              if (snap.screen === "repeat_speech" && snap.repeatConfirmed) {
+                return restore(snap, state.history.slice(0, i));
+              }
+            }
+          }
+          return restore(state.history[state.history.length - 1], state.history.slice(0, -1));
+        }
+
+        if (action.type === "NEXT") {
+          if (state.screen === "game_over") return create();
+          const next = playCopy(state);
+          const before = next.screen;
+          advance(next);
+          const sameFarewell = (next.farewellQueue && next.farewellQueue[0]) === (state.farewellQueue && state.farewellQueue[0]);
+          if (next.screen === before && next.winner === state.winner && sameFarewell) return state;
+          next.history = state.history.concat([snapshot(state)]);
+          return next;
+        }
+
+        const next = playCopy(state);
+
+        switch (action.type) {
+          case "SET_NAME":
+            p(next, action.seat).name = action.name;
+            break;
+          case "DEMO_NAMES":
+            ["Alex", "Blake", "Casey", "Drew", "Eden", "Fin", "Gray", "Harper", "Indigo", "Jules"]
+              .forEach((n, i) => { next.players[i].name = n; });
+            break;
+          case "RANDOM_NAMES": {
+            const pool = roster.filter((r) => r && r.name).map((r) => r.name);
+            for (let i = pool.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [pool[i], pool[j]] = [pool[j], pool[i]];
+            }
+            next.players.forEach((pl, i) => { pl.name = pool[i] || ""; });
+            break;
+          }
+          case "ASSIGN_ROLE": {
+            const pl = p(next, next.roleSeat);
+            const left = remainingRoles(next);
+            if (pl.role === action.role) break;
+            if (pl.role) { /* returned to pool automatically via remainingRoles */ }
+            if (left[action.role] <= 0) break;
+            pl.role = action.role;
+            if (next.roleSeat < 10) next.roleSeat += 1;
+            break;
+          }
+          case "ROLE_SEAT":
+            next.roleSeat = action.seat;
+            break;
+          case "FOUL": {
+            const pl = p(next, action.seat);
+            const foulOut = !pl.alive && pl.outReason === "fouls";
+            if (!pl.alive && !foulOut) break;
+            const n = Math.max(0, Math.min(4, pl.fouls + (action.delta || 1)));
+            pl.fouls = n;
+            if (n >= 3 && n < 4) pl.skipNextSpeech = true;
+            if (n < 3) pl.skipNextSpeech = false;
+            if (n >= 4 && pl.alive) {
+              eliminate(next, action.seat, "fouls");
+              if (isVotePhase(next)) next.voteAborted = true;
+              checkWin(next);
+            } else if (n < 4 && foulOut) {
+              pl.alive = true;
+              pl.outReason = null;
+              next.winner = null;
+              if (next.screen === "game_over") next.screen = "day_speech";
+            }
+            break;
+          }
+          case "NOMINATE": {
+            const pl = p(next, action.seat);
+            const speaker = next.speaker;
+            if (next.screen !== "day_speech" || next.speechesConfirmed || !pl || !pl.alive) break;
+            if (speaker == null || next.nominatedBy[speaker] != null) break;
+            if (next.nominations.includes(action.seat)) break;
+            next.nominations.push(action.seat);
+            next.nominatedBy[speaker] = action.seat;
+            break;
+          }
+          case "DROP_NOM": {
+            if (next.screen !== "day_speech" || next.speechesConfirmed) break;
+            if (!next.nominations.includes(action.seat)) break;
+            next.nominations = next.nominations.filter((seat) => seat !== action.seat);
+            Object.keys(next.nominatedBy).forEach((who) => {
+              if (next.nominatedBy[who] === action.seat) delete next.nominatedBy[who];
+            });
+            break;
+          }
+          case "END_SPEECH":
+            if (next.screen === "day_speech") {
+              const who = p(next, next.speaker);
+              if (who) who.skipNextSpeech = false;
+              if (next.speaker != null && !next.spoken.includes(next.speaker)) next.spoken.push(next.speaker);
+              const nxt = nextUnspoken(next, next.speaker);
+              if (nxt == null) {
+                next.speechesConfirmed = true;
+                next.speechGap = false;
+              } else {
+                next.speaker = nxt;
+                next.speechGap = true;
+              }
+            } else if (next.screen === "repeat_speech") {
+              if (next.repeatSpeaker != null && !next.repeatSpoken.includes(next.repeatSpeaker)) {
+                next.repeatSpoken.push(next.repeatSpeaker);
+              }
+              const nxt = nextRepeatUnspoken(next, next.repeatSpeaker);
+              if (nxt == null) {
+                next.repeatConfirmed = true;
+                next.repeatSpeechGap = false;
+              } else {
+                next.repeatSpeaker = nxt;
+                next.repeatSpeechGap = true;
+              }
+            }
+            break;
+          case "NEXT_SPEAKER":
+            if (next.screen === "day_speech" && next.speechGap) {
+              next.speaker = nextUnspoken(next, next.speaker);
+              next.speechGap = false;
+            } else if (next.screen === "repeat_speech" && next.repeatSpeechGap) {
+              next.repeatSpeaker = nextRepeatUnspoken(next, next.repeatSpeaker);
+              next.repeatSpeechGap = false;
+            }
+            break;
+          case "CONFIRM_SPEECHES":
+            if (next.screen === "day_speech") {
+              next.speechesConfirmed = true;
+              next.speechGap = false;
+            } else if (next.screen === "repeat_speech") {
+              next.repeatConfirmed = true;
+              next.repeatSpeechGap = false;
+            }
+            break;
+          case "SET_VOTE": {
+            if (next.voteAborted) break;
+            const seats = votingSeats(next);
+            const i = next.voteCursor || 0;
+            if (action.seat !== seats[i]) break;
+            const used = seats.slice(0, i).reduce((sum, seat) => sum + (next.votes[seat] || 0), 0);
+            const max = Math.max(0, living(next).length - used);
+            const n = Math.max(0, Math.min(max, Number(action.n) || 0));
+            next.votes[action.seat] = n;
+            next.voteCursor = i + 1;
+            fillImpliedVotes(next);
+            break;
+          }
+          case "ALL_LEAVE":
+            if (next.voteAborted) break;
+            next.allLeaveYes = Math.max(0, Math.min(living(next).length, Number(action.n) || 0));
+            break;
+          case "SHOOT":
+            next.shoot = action.seat;
+            next.miss = false;
+            break;
+          case "MISS":
+            next.shoot = null;
+            next.miss = true;
+            break;
+          case "DON_CHECK": {
+            const pl = p(next, action.seat);
+            if (!pl) break;
+            next.donCheck = action.seat;
+            next.donResult = pl.role === "sheriff" ? "sheriff" : "not";
+            break;
+          }
+          case "SHERIFF_CHECK": {
+            const pl = p(next, action.seat);
+            if (!pl) break;
+            next.sheriffCheck = action.seat;
+            next.sheriffResult = isBlack(pl.role) ? "black" : "red";
+            break;
+          }
+          case "GUESS": {
+            const i = next.morningGuess.indexOf(action.seat);
+            if (i >= 0) next.morningGuess.splice(i, 1);
+            else if (next.morningGuess.length < 3) next.morningGuess.push(action.seat);
+            break;
+          }
+          default:
+            break;
+        }
+
+        if (action.type === "END_SPEECH" || action.type === "CONFIRM_SPEECHES" || action.type === "NEXT_SPEAKER") {
+          next.history = state.history.concat([snapshot(state)]);
+        }
+
+        return next;
+      };
+
+      const voteCall = (s) => {
+        if (s.voteAborted && isVotePhase(s)) return t("vote_stopped");
+        if (s.screen === "day_voting") {
+          const noms = livingNoms(s);
+          if (!noms.length) return t("no_noms_night");
+          if (s.voteCursor < noms.length) return t("how_many_hands");
+          if (noms.length === 1) {
+            const need = majority(living(s).length);
+            const n = s.votes[noms[0]] || 0;
+            return n >= need
+              ? t("majority_leaves", { name: nameOf(p(s, noms[0])) })
+              : t("needs_hands", { name: nameOf(p(s, noms[0])), need });
+          }
+          const lead = leadersOf(s.votes, noms);
+          if (!lead.length) return t("no_hands_night");
+          if (lead.length === 1) return t("alone_leaves", { name: nameOf(p(s, lead[0])) });
+          return t("tied_revote");
+        }
+        if (s.screen === "repeat_voting") {
+          const seats = votingSeats(s);
+          const lead = leadersOf(s.votes, seats);
+          if (s.voteCursor < seats.length) return t("how_many_hands");
+          if (!lead.length) return t("no_hands_stay");
+          if (lead.length === 1) return t("alone_leaves", { name: nameOf(p(s, lead[0])) });
+          if (sameSet(lead, s.lastLeaderSet)) return t("same_top");
+          return t("different_top");
+        }
+        if (s.screen === "all_leave") {
+          if (s.allLeaveYes == null) return "";
+          const need = majority(living(s).length);
+          return s.allLeaveYes >= need
+            ? t("all_yes")
+            : t("need_yeses", { n: s.allLeaveYes });
+        }
+        return "";
+      };
+
+      return {
+        create, reduce, canGo, voteCall, living, nameOf, label, remainingRoles,
+        nextLiving, nextUnspoken, speechesOver, repeatSpeechesOver, nextRepeatUnspoken, p, isRed, isBlack, majority, nomOrder, leadersOf, livingNoms, votingSeats, skipsSpeech,
+      };
+    })();
+
+    let state = Table.create();
+
+    const timer = {
+      key: "",
+      left: 0,
+      limit: 0,
+      handle: null,
+      running: false,
+      silent: false,
+    };
+
+    let audio;
+    const unlockAudio = () => {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === "suspended") audio.resume();
+    };
+
+    const playNoise = (when, seconds, { type, freq, q, gain }) => {
+      if (!audio) return;
+      const n = Math.max(1, Math.floor(audio.sampleRate * seconds));
+      const buf = audio.createBuffer(1, n, audio.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) data[i] = Math.random() * 2 - 1;
+      const src = audio.createBufferSource();
+      src.buffer = buf;
+      const filter = audio.createBiquadFilter();
+      filter.type = type;
+      filter.frequency.value = freq;
+      filter.Q.value = q;
+      const g = audio.createGain();
+      const t = audio.currentTime + when;
+      g.gain.setValueAtTime(gain, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + seconds);
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(audio.destination);
+      src.start(t);
+      src.stop(t + seconds);
+    };
+
+    const quietClick = () => {
+      playNoise(0, 0.008, { type: "highpass", freq: 1800, q: 0.4, gain: 0.3 });
+    };
+
+    const knock = (when) => {
+      playNoise(when, 0.09, { type: "bandpass", freq: 260, q: 2.6, gain: 0.9 });
+      playNoise(when, 0.06, { type: "bandpass", freq: 480, q: 1.8, gain: 0.5 });
+      playNoise(when, 0.012, { type: "highpass", freq: 1400, q: 0.6, gain: 0.4 });
+    };
+
+    const loudClick = () => {
+      knock(0);
+      knock(0.16);
+    };
+
+    const stopTimer = () => {
+      if (timer.handle) clearInterval(timer.handle);
+      timer.handle = null;
+      timer.running = false;
+    };
+
+    const onTick = () => {
+      if (timer.left <= 0) {
+        stopTimer();
+        return;
+      }
+      timer.left -= 1;
+      const left = timer.left;
+      if (!timer.silent) {
+        if (left === 10) quietClick();
+        if (left === 0) loudClick();
+      }
+      renderClock();
+      if (left === 0) {
+        stopTimer();
+        if (state.screen === "day_speech" || state.screen === "repeat_speech") {
+          dispatch({ type: "END_SPEECH" });
+          return;
+        }
+        render();
+      }
+    };
+
+    const armTimer = (key, seconds, opts = {}) => {
+      if (timer.key === key) return;
+      stopTimer();
+      timer.key = key;
+      timer.limit = seconds;
+      timer.left = seconds;
+      timer.silent = !!opts.silent;
+    };
+
+    const playTimer = () => {
+      if (timer.running || timer.left <= 0) return;
+      unlockAudio();
+      timer.running = true;
+      timer.handle = setInterval(onTick, 1000);
+    };
+
+    const ensureTimer = (key, seconds, opts) => {
+      if (timer.key === key) return;
+      armTimer(key, seconds, opts);
+      playTimer();
+    };
+
+    const roleGone = (role) => {
+      const pl = state.players.find((p) => p.role === role);
+      return !pl || !pl.alive;
+    };
+
+    const fmt = (n) => {
+      const m = Math.floor(n / 60);
+      return m + ":" + String(n % 60).padStart(2, "0");
+    };
+
+    const dispatch = (action) => {
+      unlockAudio();
+      state = Table.reduce(state, action);
+      render();
+    };
+
+    const nightCards = (attr, chosen, { onlyLiving } = {}) =>
+      state.players.map((pl) => {
+        const gone = !pl.alive;
+        const blocked = onlyLiving && gone;
+        return `
+          <button type="button" ${blocked ? "disabled" : `${attr}="${pl.seat}"`}
+            class="${chosen === pl.seat ? "chosen" : ""} ${gone ? "gone" : ""}">
+            ${pl.seat}<br />${Table.nameOf(pl)}
+          </button>
+        `;
+      }).join("");
+
+    const ballotHtml = (seats, kind, current, { picked, droppable } = {}) => {
+      if (!seats.length) {
+        return `
+          <div class="ballot">
+            <p class="kind">${kind}</p>
+            <p class="empty">${t("no_one_nominated")}</p>
+          </div>
+        `;
+      }
+      const items = seats.map((seat) => {
+        const pl = Table.p(state, seat);
+        const cls = `${current === seat ? "now" : ""} ${picked === seat ? "pick" : ""}`;
+        const tag = droppable ? "button" : "div";
+        const extra = droppable ? `type="button" data-drop-nom="${seat}"` : "";
+        return `
+          <${tag} class="ballot-seat ${cls}" ${extra}>
+            <div class="circ">${seat}</div>
+            <div class="who">${Table.nameOf(pl)}</div>
+          </${tag}>
+        `;
+      }).join("");
+      return `
+        <div class="ballot">
+          <p class="kind">${kind}</p>
+          <div class="ballot-row">${items}</div>
+        </div>
+      `;
+    };
+
+    const voteRowsHtml = (seats) => {
+      const nLive = Table.living(state).length;
+      const cursor = state.voteCursor || 0;
+      const stopped = !!state.voteAborted;
+      return seats.map((seat, i) => {
+        const pl = Table.p(state, seat);
+        const used = seats.slice(0, i).reduce((sum, s) => sum + (state.votes[s] || 0), 0);
+        const max = Math.max(0, nLive - used);
+        const cls = stopped ? "done" : i < cursor ? "done" : i === cursor ? "current" : "pending";
+        const picks = stopped
+          ? (state.votes[seat] != null ? `<div class="vote-picked">${state.votes[seat]}</div>` : "")
+          : i === cursor
+            ? `<div class="vote-picks">${Array.from({ length: max + 1 }, (_, n) =>
+                `<button type="button" data-set-vote="${seat}" data-n="${n}">${n}</button>`
+              ).join("")}</div>`
+            : i < cursor
+              ? `<div class="vote-picked">${state.votes[seat] || 0}</div>`
+              : "";
+        return `
+          <div class="vote-row ${cls}">
+            <div class="who"><span class="vote-n">${seat}</span> ${Table.nameOf(pl)}</div>
+            ${picks}
+          </div>
+        `;
+      }).join("");
+    };
+
+    const muteIco = () =>
+      `<span class="mute-ico" title="${t("skip_title")}" aria-label="${t("skip_title")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9h3.2L12 5v14l-4.8-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4.2 4.2 19.8 19.8"/></svg></span>`;
+
+    const clockHtml = () =>
+      `<div class="clock ${timer.left <= 10 ? "low" : ""}" id="clock">${fmt(timer.left)}</div>`;
+
+    const speechChrome = (pl, status, { hideTimer, act, disabled }) => `
+      <div class="speech-head">
+        <div class="hero-seat">${pl.seat}</div>
+        <div class="hero-name"><span class="nm-text">${Table.nameOf(pl)}</span>${Table.skipsSpeech(state, pl) ? muteIco() : ""}</div>
+        <div class="clock ${timer.left <= 10 ? "low" : ""} ${hideTimer ? "is-hidden" : ""}" id="clock">${fmt(timer.left)}</div>
+      </div>
+      <div class="speech-status">${status}</div>
+      <div class="speech-acts">
+        <button type="button" class="primary main-act" id="speech-act" data-act="${act}" ${disabled ? "disabled" : ""}>${act === "start" ? t("start") : t("thats_it")}</button>
+      </div>
+    `;
+
+    const renderClock = () => {
+      const el = document.getElementById("clock");
+      if (el) {
+        el.textContent = fmt(timer.left);
+        el.classList.toggle("low", timer.left <= 10);
+      }
+    };
+
+    const playerRows = (opts) => {
+      const { foul, nom, highlight, frame } = opts;
+      return state.players.map((pl) => {
+        const canFoul = foul && (pl.alive || pl.outReason === "fouls");
+        const dots = [0, 1, 2, 3].map((i) => {
+          const on = pl.fouls > i;
+          if (canFoul && on) {
+            return `<button type="button" class="dot on" data-foul="${pl.seat}" data-d="-1" title="${t("remove_foul")}"></button>`;
+          }
+          return `<span class="dot ${on ? "on" : ""}"></span>`;
+        }).join("");
+        const nominated = state.nominations.includes(pl.seat);
+        const framed = Array.isArray(frame) ? frame.includes(pl.seat) : nominated;
+        const speakerHasNom = state.nominatedBy[state.speaker] != null;
+        const allowNom = nom && pl.alive && !state.speechesConfirmed && !speakerHasNom && !nominated;
+        return `
+          <div class="player-row ${pl.alive ? "" : "dead"} ${highlight === pl.seat ? "speak" : ""} ${framed && highlight !== pl.seat ? "nom" : ""} ${canFoul ? "foulable" : ""}" ${canFoul ? `data-foul-add="${pl.seat}"` : ""}>
+            <div class="n">${pl.seat}</div>
+            <div class="nm"><span class="nm-text">${Table.nameOf(pl)}${pl.alive ? "" : " · " + t("out")}</span>${Table.skipsSpeech(state, pl) ? muteIco() : ""}</div>
+            <div class="dots">${dots}</div>
+            ${nom ? (pl.alive
+              ? `<button class="chip ${nominated ? "on" : ""}" ${allowNom ? `data-nom="${pl.seat}"` : "disabled"}>${nominated ? t("on_ballot") : t("nominate")}</button>`
+              : `<span class="chip-slot"></span>`) : ""}
+          </div>
+        `;
+      }).join("");
+    };
+
+    const screens = {
+      registration() {
+        return `
+          <p class="kicker">${t("before_sleep")}</p>
+          <h1>${t("who_at_table")}</h1>
+          ${state.players.map((pl) => `
+            <div class="reg-row">
+              <div class="n">${pl.seat}</div>
+              <div class="reg-pick">
+                <input data-name="${pl.seat}" value="${pl.name.replace(/"/g, "&quot;")}" placeholder="${t("name_ph")}" autocomplete="off" />
+                <div class="suggest" hidden></div>
+              </div>
+            </div>
+          `).join("")}
+          <button type="button" class="primary main-act" id="demo">${t("sample_names")}</button>
+        `;
+      },
+
+      roles() {
+        const pl = Table.p(state, state.roleSeat);
+        const left = Table.remainingRoles(state);
+        const buttons = ["civilian", "sheriff", "mafia", "don"].map((role) => {
+          const n = left[role];
+          const mine = pl.role === role;
+          const shut = n <= 0 && !mine;
+          return `
+            <button data-role="${role}" class="${mine ? "picked" : ""}" ${shut ? "disabled" : ""}>
+              ${Table.label(role)}
+              <span class="left">${mine ? t("theirs") : t("left_n", { n })}</span>
+            </button>
+          `;
+        }).join("");
+        return `
+          <p class="kicker">${t("roles_of", { n: state.roleSeat })}</p>
+          <div class="hero-seat">${pl.seat}</div>
+          <div class="hero-name">${Table.nameOf(pl)}</div>
+          <p class="lede">${t("what_draw")}</p>
+          <div class="role-grid">${buttons}</div>
+          <div class="role-map">${state.players.map((pl) => {
+            const letter = pl.role ? t("letter_" + pl.role) : "";
+            const wide = letter.length > 1 ? "is-wide" : "";
+            const team = pl.role
+              ? (Table.isRed(pl.role) ? "red" : "black")
+              : "";
+            const current = pl.seat === state.roleSeat ? "current" : "";
+            const pending = !pl.role && pl.seat !== state.roleSeat ? "pending" : "";
+            const filled = pl.role ? "filled" : "";
+            return `
+              <button type="button" class="role-cell ${team} ${current} ${pending} ${filled}" data-role-seat="${pl.seat}">
+                <span class="role-cell-n">${pl.seat}</span>
+                <span class="role-cell-l ${wide}">${letter}</span>
+              </button>
+            `;
+          }).join("")}</div>
+        `;
+      },
+
+      mafia_agree() {
+        armTimer("mafia_agree", 60);
+        return `
+          <p class="kicker">${t("city_asleep")}</p>
+          <h1>${t("mafia_find")}</h1>
+          <p class="lede">${t("mafia_lede")}</p>
+          ${clockHtml()}
+          ${timer.running || timer.left <= 0 ? "" : `<button class="primary main-act" id="play-timer">${t("play")}</button>`}
+        `;
+      },
+
+      sheriff_show() {
+        return `
+          <p class="kicker">${t("still_night")}</p>
+          <h1>${t("sheriff_show")}</h1>
+        `;
+      },
+
+      free_sit() {
+        ensureTimer("free_sit", 20);
+        return `
+          <p class="kicker">${t("good_morning")}</p>
+          <h1>${t("sit_twenty")}</h1>
+          <p class="lede">${t("sit_lede")}</p>
+          ${clockHtml()}
+        `;
+      },
+
+      day_speech() {
+        const done = state.speechesConfirmed;
+        const pl = Table.p(state, state.speaker);
+        const skip = !done && Table.skipsSpeech(state, pl);
+        if (done || skip) {
+          stopTimer();
+          timer.key = "";
+        } else {
+          armTimer("speech-" + state.dayNumber + "-" + state.speaker, 60);
+        }
+        const waiting = !done && !skip && !timer.running && timer.left > 0;
+        const nxt = Table.nextUnspoken(state, state.speaker);
+        const status = done
+          ? t("everyone_spoken")
+          : waiting
+            ? t("next_speaker", { seat: pl.seat, name: Table.nameOf(pl) })
+            : nxt && nxt !== state.speaker
+              ? t("next_speaker", { seat: nxt, name: Table.nameOf(Table.p(state, nxt)) })
+              : "";
+        return `
+          <p class="kicker">${t("day_n", { n: state.dayNumber })} · ${skip ? t("no_speech") : t("the_floor")}</p>
+          ${speechChrome(pl, status, {
+            hideTimer: done || skip,
+            act: waiting ? "start" : "end",
+            disabled: done,
+          })}
+          <p class="lede">${skip ? t("skip_lede") : t("foul_lede")}</p>
+          ${ballotHtml(Table.livingNoms(state), t("first_vote"), null, {
+            picked: state.nominatedBy[state.speaker],
+            droppable: !done,
+          })}
+          ${playerRows({ foul: true, nom: !done, highlight: done ? null : state.speaker })}
+        `;
+      },
+
+      day_voting() {
+        const noms = Table.livingNoms(state);
+        const current = noms[state.voteCursor];
+        if (!noms.length) {
+          return `
+            <p class="kicker">${t("day_vote", { n: state.dayNumber })}</p>
+            <h1>${t("no_one_named")}</h1>
+            <p class="lede">${t("city_sleeps_now")}</p>
+            ${ballotHtml([], t("first_vote"))}
+            <p class="lede">${t("foul_lede")}</p>
+            ${playerRows({ foul: true, nom: false })}
+          `;
+        }
+        return `
+          <p class="kicker">${t("day_vote", { n: state.dayNumber })}</p>
+          <h1>${t("hands_each")}</h1>
+          ${ballotHtml(noms, t("first_vote"), current)}
+          ${voteRowsHtml(noms)}
+          <div class="call">${Table.voteCall(state)}</div>
+          <p class="lede">${t("foul_lede")}</p>
+          ${playerRows({ foul: true, nom: false })}
+        `;
+      },
+
+      repeat_speech() {
+        const done = state.repeatConfirmed || state.voteAborted;
+        const order = Table.nomOrder(state, state.repeatSeats);
+        const seat = state.repeatSpeaker || order[0];
+        const pl = Table.p(state, seat);
+        if (done) {
+          stopTimer();
+          timer.key = "";
+        } else {
+          armTimer("rspeech-" + state.dayNumber + "-" + seat, 30);
+        }
+        const waiting = !done && !timer.running && timer.left > 0;
+        const nxt = Table.nextRepeatUnspoken(state, seat);
+        const status = done
+          ? t("everyone_spoken")
+          : waiting
+            ? t("next_speaker", { seat: pl.seat, name: Table.nameOf(pl) })
+            : nxt && nxt !== seat
+              ? t("next_speaker", { seat: nxt, name: Table.nameOf(Table.p(state, nxt)) })
+              : "";
+        return `
+          <p class="kicker">${t("another_30", { n: state.dayNumber })}</p>
+          ${speechChrome(pl, status, {
+            hideTimer: done,
+            act: waiting ? "start" : "end",
+            disabled: done,
+          })}
+          <p class="lede">${t("foul_lede")}</p>
+          ${ballotHtml(order, t("another_word"), done ? null : seat)}
+          ${playerRows({ foul: true, nom: false, highlight: done ? null : seat, frame: order })}
+        `;
+      },
+
+      repeat_voting() {
+        const seats = Table.nomOrder(state, state.repeatSeats);
+        const current = seats[state.voteCursor];
+        return `
+          <p class="kicker">${t("vote_again", { n: state.dayNumber })}</p>
+          <h1>${t("hands_once")}</h1>
+          ${ballotHtml(seats, t("repeat_noms"), current)}
+          ${voteRowsHtml(seats)}
+          <div class="call">${Table.voteCall(state)}</div>
+          <p class="lede">${t("foul_lede")}</p>
+          ${playerRows({ foul: true, nom: false })}
+        `;
+      },
+
+      all_leave() {
+        const need = Table.majority(Table.living(state).length);
+        return `
+          <p class="kicker">${t("lift_kicker", { n: state.dayNumber })}</p>
+          <h1>${t("do_they_all")}</h1>
+          <p class="lede">${t("half_yes", { need })}</p>
+          ${ballotHtml(Table.nomOrder(state, state.repeatSeats), t("last_question"))}
+          <div class="vote-row current">
+            <div class="who">${t("yes")}</div>
+            <div class="vote-picks">${Array.from({ length: Table.living(state).length + 1 }, (_, n) =>
+              `<button type="button" data-leave="${n}" class="${state.allLeaveYes === n ? "primary" : ""}">${n}</button>`
+            ).join("")}</div>
+          </div>
+          ${Table.voteCall(state) ? `<div class="call">${Table.voteCall(state)}</div>` : ""}
+          <p class="lede">${t("foul_lede")}</p>
+          ${playerRows({ foul: true, nom: false })}
+        `;
+      },
+
+      city_sleeps() {
+        return `
+          <p class="kicker">${t("night")}</p>
+          <h1>${t("night_city")}</h1>
+          <p class="lede">${t("eyes_closed")}</p>
+        `;
+      },
+
+      city_still() {
+        return `
+          <p class="kicker">${t("night")}</p>
+          <h1>${t("night_city")}</h1>
+          <p class="lede">${t("still_asleep")}</p>
+        `;
+      },
+
+      night_shoot() {
+        return `
+          <p class="kicker">${t("night_shot")}</p>
+          <h1>${t("who_shot")}</h1>
+          <p class="lede">${t("shoot_lede")}</p>
+          <div class="pick-grid">
+            ${nightCards("data-shoot", state.shoot, { onlyLiving: true })}
+            <button class="miss ${state.miss ? "chosen" : ""}" data-miss="1">✕ &nbsp; ${t("miss")}</button>
+          </div>
+        `;
+      },
+
+      night_don() {
+        if (roleGone("don")) {
+          ensureTimer("cover-don-" + state.dayNumber, 15, { silent: true });
+          return `
+            <p class="kicker">${t("night_don")}</p>
+            <h1>${t("don_looks")}</h1>
+            ${clockHtml()}
+          `;
+        }
+        if (String(timer.key).startsWith("cover-")) {
+          stopTimer();
+          timer.key = "";
+        }
+        const result = state.donResult == null
+          ? ""
+          : state.donResult === "sheriff"
+            ? `<div class="result">${t("they_sheriff")}</div>`
+            : `<div class="result">${t("not_sheriff")}</div>`;
+        return `
+          <p class="kicker">${t("night_don")}</p>
+          <h1>${t("don_looks")}</h1>
+          <p class="lede">${t("don_lede")}</p>
+          <div class="pick-grid">${nightCards("data-don", state.donCheck)}</div>
+          ${result}
+        `;
+      },
+
+      night_sheriff() {
+        if (roleGone("sheriff")) {
+          ensureTimer("cover-sheriff-" + state.dayNumber, 15, { silent: true });
+          return `
+            <p class="kicker">${t("night_sheriff")}</p>
+            <h1>${t("sheriff_check")}</h1>
+            ${clockHtml()}
+          `;
+        }
+        if (String(timer.key).startsWith("cover-")) {
+          stopTimer();
+          timer.key = "";
+        }
+        const result = state.sheriffResult == null
+          ? ""
+          : state.sheriffResult === "black"
+            ? `<div class="result">${t("color_black")}</div>`
+            : `<div class="result">${t("color_red")}</div>`;
+        return `
+          <p class="kicker">${t("night_sheriff")}</p>
+          <h1>${t("sheriff_check")}</h1>
+          <p class="lede">${t("sheriff_lede")}</p>
+          <div class="pick-grid">${nightCards("data-sher", state.sheriffCheck)}</div>
+          ${result}
+        `;
+      },
+
+      morning_guess() {
+        const dead = Table.p(state, state.killedTonight);
+        armTimer("guess-" + state.dayNumber, 20);
+        const cards = state.players.map((pl) => `
+          <button data-guess="${pl.seat}" class="${state.morningGuess.includes(pl.seat) ? "chosen" : ""}">
+            ${pl.seat} ${Table.nameOf(pl)}
+          </button>
+        `).join("");
+        return `
+          <p class="kicker">${t("first_morning", { n: state.dayNumber + 1 })}</p>
+          <h1>${t("names_three", { name: Table.nameOf(dead) })}</h1>
+          <p class="lede">${t("guess_lede")}</p>
+          ${clockHtml()}
+          ${!timer.running && timer.left > 0 ? `<button class="primary main-act" id="play-timer">${t("play")}</button>` : ""}
+          <div class="pick-grid">${cards}</div>
+        `;
+      },
+
+      morning_farewell() {
+        const voteBye = !!(state.farewellQueue && state.farewellQueue.length);
+        const seat = voteBye ? state.farewellQueue[0] : state.killedTonight;
+        const dead = Table.p(state, seat);
+        armTimer("bye-" + state.dayNumber + "-" + seat, 60);
+        const kicker = voteBye
+          ? t("last_word", { n: state.dayNumber })
+          : t("morning_last_word", { n: state.dayNumber + 1 });
+        return `
+          <p class="kicker">${kicker}</p>
+          <div class="speech-head">
+            <div class="hero-seat">${dead.seat}</div>
+            <div class="hero-name"><span class="nm-text">${Table.nameOf(dead)}</span></div>
+          </div>
+          <p class="lede">${t("goodbye")}</p>
+          ${clockHtml()}
+          ${!timer.running && timer.left > 0 ? `<button class="primary main-act" id="play-timer">${t("play")}</button>` : ""}
+        `;
+      },
+
+      game_over() {
+        const joinNames = (names) => {
+          if (!names.length) return "—";
+          if (names.length === 1) return names[0];
+          if (names.length === 2) return names[0] + " " + t("and") + " " + names[1];
+          return names.slice(0, -1).join(", ") + " " + t("and") + " " + names[names.length - 1];
+        };
+        const mafia = state.players.filter((pl) => pl.role === "mafia").map((pl) => Table.nameOf(pl));
+        const don = state.players.find((pl) => pl.role === "don");
+        const sheriff = state.players.find((pl) => pl.role === "sheriff");
+        const summary = [
+          t(mafia.length === 1 ? "over_mafia_one" : "over_mafia", { names: joinNames(mafia) }),
+          t("over_don", { name: don ? Table.nameOf(don) : "—" }),
+          t("over_sheriff", { name: sheriff ? Table.nameOf(sheriff) : "—" }),
+        ].join("<br />");
+        return `
+          <p class="kicker">${t("table_over")}</p>
+          <h1>${state.winner === "town" ? t("city_holds") : t("mafia_takes")}</h1>
+          <p class="lede">${summary}</p>
+        `;
+      },
+    };
+
+    const bindView = () => {
+      const view = document.getElementById("view");
+
+      view.querySelectorAll("input[data-name]").forEach((el) => {
+        bindNameInput(el);
+      });
+
+      const demo = document.getElementById("demo");
+      if (demo) demo.onclick = () => ensureRoster().then(() => dispatch({ type: "RANDOM_NAMES" }));
+
+      view.querySelectorAll("button[data-role]").forEach((el) => {
+        el.onclick = () => dispatch({ type: "ASSIGN_ROLE", role: el.dataset.role });
+      });
+      view.querySelectorAll("button[data-role-seat]").forEach((el) => {
+        el.onclick = () => dispatch({ type: "ROLE_SEAT", seat: Number(el.dataset.roleSeat) });
+      });
+
+      const ns = document.getElementById("next-speaker");
+      if (ns) ns.onclick = () => dispatch({ type: "NEXT_SPEAKER" });
+      const confirm = document.getElementById("confirm-speeches");
+      if (confirm) confirm.onclick = () => dispatch({ type: "CONFIRM_SPEECHES" });
+      const play = document.getElementById("play-timer");
+      if (play) play.onclick = () => { playTimer(); render(); };
+      const speechAct = document.getElementById("speech-act");
+      if (speechAct) {
+        speechAct.onclick = () => {
+          if (speechAct.dataset.act === "start") {
+            playTimer();
+            render();
+          } else {
+            dispatch({ type: "END_SPEECH" });
+          }
+        };
+      }
+
+      view.onclick = (e) => {
+        const foul = e.target.closest("[data-foul]");
+        if (foul) return dispatch({ type: "FOUL", seat: Number(foul.dataset.foul), delta: Number(foul.dataset.d) });
+        const nom = e.target.closest("[data-nom]");
+        if (nom) return dispatch({ type: "NOMINATE", seat: Number(nom.dataset.nom) });
+        const dropNom = e.target.closest("[data-drop-nom]");
+        if (dropNom) return dispatch({ type: "DROP_NOM", seat: Number(dropNom.dataset.dropNom) });
+        const addFoul = e.target.closest("[data-foul-add]");
+        if (addFoul) return dispatch({ type: "FOUL", seat: Number(addFoul.dataset.foulAdd), delta: 1 });
+        const vote = e.target.closest("[data-set-vote]");
+        if (vote) return dispatch({ type: "SET_VOTE", seat: Number(vote.dataset.setVote), n: Number(vote.dataset.n) });
+        const leave = e.target.closest("[data-leave]");
+        if (leave) return dispatch({ type: "ALL_LEAVE", n: Number(leave.dataset.leave) });
+        const shoot = e.target.closest("[data-shoot]");
+        if (shoot) return dispatch({ type: "SHOOT", seat: Number(shoot.dataset.shoot) });
+        const miss = e.target.closest("[data-miss]");
+        if (miss) return dispatch({ type: "MISS" });
+        const don = e.target.closest("[data-don]");
+        if (don) return dispatch({ type: "DON_CHECK", seat: Number(don.dataset.don) });
+        const sher = e.target.closest("[data-sher]");
+        if (sher) return dispatch({ type: "SHERIFF_CHECK", seat: Number(sher.dataset.sher) });
+        const guess = e.target.closest("[data-guess]");
+        if (guess) return dispatch({ type: "GUESS", seat: Number(guess.dataset.guess) });
+      };
+    };
+
+    const renderNav = () => {
+      const voteStepBack = (state.screen === "day_voting" || state.screen === "repeat_voting") && state.voteCursor > 0;
+      const backOff = !state.history.length && !voteStepBack;
+      const hideNext =
+        (state.screen === "day_speech" && !state.speechesConfirmed) ||
+        (state.screen === "repeat_speech" && !state.repeatConfirmed && !state.voteAborted) ||
+        (state.screen === "night_don" && roleGone("don") && timer.left > 0) ||
+        (state.screen === "night_sheriff" && roleGone("sheriff") && timer.left > 0);
+      const liftPending = state.screen === "all_leave" && state.allLeaveYes == null && !state.voteAborted;
+      const why = hideNext || liftPending ? null : Table.canGo(state);
+      const nextLabel = state.screen === "game_over" ? t("new_table") : t("next");
+      document.getElementById("nav").innerHTML = `
+        <button id="back" ${backOff ? "disabled" : ""}>${t("back")}</button>
+        ${why ? `<div class="why">${why}</div>` : ""}
+        ${hideNext ? "" : `<button class="primary next" id="next" ${why || liftPending ? "disabled" : ""}>${nextLabel}</button>`}
+      `;
+      document.getElementById("back").onclick = () => dispatch({ type: "BACK" });
+      const nextBtn = document.getElementById("next");
+      if (nextBtn) nextBtn.onclick = () => dispatch({ type: "NEXT" });
+    };
+
+    const NIGHT_SCREENS = new Set([
+      "roles", "mafia_agree", "sheriff_show", "free_sit",
+      "city_sleeps", "city_still", "night_shoot", "night_don", "night_sheriff",
+    ]);
+
+    const FALLBACK_COVER = "data:image/svg+xml," + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect fill="#1b1f16" width="80" height="80"/><circle cx="40" cy="40" r="18" fill="none" stroke="#e2b13c" stroke-width="3"/><circle cx="40" cy="40" r="5" fill="#e2b13c"/></svg>'
+    );
+
+    const nightPlayer = { loaded: false, instance: null, prevScreen: "", volume: 0.8, lastVolume: 0.8, usedNight: false };
+
+    const setNightVolume = (value) => {
+      nightPlayer.volume = Math.max(0, Math.min(1, value));
+      if (nightPlayer.volume > 0) nightPlayer.lastVolume = nightPlayer.volume;
+      const slider = document.getElementById("night-volume");
+      const spk = document.getElementById("night-speaker");
+      slider.value = String(Math.round(nightPlayer.volume * 100));
+      slider.style.setProperty("--vol", slider.value + "%");
+      const lvl = nightPlayer.volume <= 0 ? 0 : nightPlayer.volume <= 0.33 ? 1 : nightPlayer.volume <= 0.66 ? 2 : 3;
+      spk.className = "spk lvl-" + lvl;
+      spk.title = lvl === 0 ? t("unmute") : t("mute");
+      if (nightPlayer.instance) nightPlayer.instance.volume(nightPlayer.volume, true);
+    };
+
+    document.getElementById("night-volume").addEventListener("input", (e) => {
+      setNightVolume(Number(e.target.value) / 100);
+    });
+    document.getElementById("night-speaker").addEventListener("click", () => {
+      setNightVolume(nightPlayer.volume > 0 ? 0 : nightPlayer.lastVolume || 0.5);
+    });
+
+    const musicLocked = () => state.screen === "registration";
+    const musicVisible = () => state.screen === "registration" || NIGHT_SCREENS.has(state.screen);
+
+    const SUPABASE = {
+      url: "https://mpasyybxqvzbnxciejqo.supabase.co",
+      bucket: "music",
+      anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1wYXN5eWJ4cXZ6Ym54Y2llanFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc2MTM5NjAsImV4cCI6MjA4MzE4OTk2MH0.W6OWShmcUwkFgCIRZfeGls0qM7bIFFzcBU06JsKy_cQ",
+    };
+
+    const loadRoster = async () => {
+      const res = await fetch(SUPABASE.url + "/rest/v1/player?select=name", {
+        headers: {
+          apikey: SUPABASE.anonKey,
+          authorization: "Bearer " + SUPABASE.anonKey,
+          accept: "application/json",
+        },
+      });
+      if (!res.ok) throw new Error("roster " + res.status);
+      const rows = await res.json();
+      roster = (Array.isArray(rows) ? rows : [])
+        .map((row) => ({ name: String(row && row.name || "").trim() }))
+        .filter((row) => row.name);
+    };
+
+    let rosterReady = null;
+    const ensureRoster = () => {
+      if (!rosterReady) {
+        rosterReady = loadRoster().catch((err) => {
+          rosterReady = null;
+          throw err;
+        });
+      }
+      return rosterReady;
+    };
+
+    const rosterMatches = (query, seat) => {
+      const q = query.trim().toLowerCase();
+      if (!q) return [];
+      const taken = new Set(
+        state.players
+          .filter((pl) => pl.seat !== seat && pl.name.trim())
+          .map((pl) => pl.name.trim().toLowerCase())
+      );
+      const rank = (name) => {
+        const n = name.toLowerCase();
+        if (n.startsWith(q)) return 0;
+        const words = n.split(/[\s\-–—_/.,]+/).filter(Boolean);
+        if (words.some((word) => word.startsWith(q))) return 1;
+        return 2;
+      };
+      return roster
+        .filter((row) => row.name.toLowerCase().includes(q) && !taken.has(row.name.toLowerCase()))
+        .map((row) => row.name)
+        .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b, "be"))
+        .slice(0, 8);
+    };
+
+    const bindNameInput = (el) => {
+      const seat = Number(el.dataset.name);
+      const box = el.parentElement.querySelector(".suggest");
+      let on = -1;
+
+      const hide = () => {
+        if (!box) return;
+        box.hidden = true;
+        box.innerHTML = "";
+        on = -1;
+      };
+
+      const apply = (name) => {
+        el.value = name;
+        state = Table.reduce(state, { type: "SET_NAME", seat, name });
+        hide();
+      };
+
+      const paint = (names) => {
+        if (!box) return;
+        if (!names.length) { hide(); return; }
+        box.hidden = false;
+        box.innerHTML = names.map((name, i) =>
+          `<button type="button" data-pick="${i}" class="${i === on ? "is-on" : ""}">${name.replace(/</g, "&lt;")}</button>`
+        ).join("");
+        box.querySelectorAll("[data-pick]").forEach((btn) => {
+          btn.onmousedown = (e) => e.preventDefault();
+          btn.onclick = () => apply(names[Number(btn.dataset.pick)]);
+        });
+      };
+
+      el.oninput = () => {
+        state = Table.reduce(state, { type: "SET_NAME", seat, name: el.value });
+        const names = rosterMatches(el.value, seat);
+        on = names.length ? 0 : -1;
+        paint(names);
+      };
+      el.onfocus = () => {
+        ensureRoster().then(() => {
+          if (document.activeElement === el) {
+            const names = rosterMatches(el.value, seat);
+            on = names.length ? 0 : -1;
+            paint(names);
+          }
+        }).catch(() => {});
+      };
+      el.onblur = () => setTimeout(hide, 120);
+      el.onkeydown = (e) => {
+        if (box.hidden) return;
+        const buttons = [...box.querySelectorAll("[data-pick]")];
+        if (!buttons.length) return;
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          on = (on + 1) % buttons.length;
+          paint(buttons.map((b) => b.textContent));
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          on = (on - 1 + buttons.length) % buttons.length;
+          paint(buttons.map((b) => b.textContent));
+        } else if (e.key === "Enter" && on >= 0) {
+          e.preventDefault();
+          apply(buttons[on].textContent);
+        } else if (e.key === "Escape") {
+          hide();
+        }
+      };
+    };
+
+    const FALLBACK_TRACKS = [
+      "ytmp3free.cc_intelligency-august-official-audio-youtubemp3free.org.mp3",
+      "ytmp3free.cc_leibonik-emigrant-song-youtubemp3free.org.mp3",
+      "ytmp3free.cc_molchat-doma-youtubemp3free.org.mp3",
+      "ytmp3free.cc_nadzeyea-official-music-video-youtubemp3free.org.mp3",
+      "ytmp3free.cc_nizkiz-2018-official-music-video-youtubemp3free.org.mp3",
+      "ytmp3free.cc_nizkiz-lyrics-video-2015-youtubemp3free.org.mp3",
+      "ytmp3free.cc_nrm-1999-youtubemp3free.org.mp3",
+      "ytmp3free.cc_zet-youtubemp3free.org.mp3",
+    ];
+
+    const trackUrl = (name) =>
+      SUPABASE.url + "/storage/v1/object/public/" + SUPABASE.bucket + "/" + encodeURIComponent(name);
+
+    const listedMp3s = (rows) =>
+      (Array.isArray(rows) ? rows : [])
+        .filter((row) => row && row.name && !row.name.endsWith("/") && /\.mp3$/i.test(row.name))
+        .map((row) => row.name);
+
+    const listRemoteTracks = async () => {
+      if (SUPABASE.anonKey) {
+        try {
+          const res = await fetch(SUPABASE.url + "/storage/v1/object/list/" + SUPABASE.bucket, {
+            method: "POST",
+            headers: {
+              Authorization: "Bearer " + SUPABASE.anonKey,
+              apikey: SUPABASE.anonKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prefix: "", limit: 1000, offset: 0, sortBy: { column: "name", order: "asc" } }),
+          });
+          if (res.ok) {
+            const names = listedMp3s(await res.json());
+            if (names.length) return names;
+          }
+        } catch (err) { /* public files still work even when listing is blocked */ }
+      }
+      return FALLBACK_TRACKS.slice();
+    };
+
+    const coverFromPic = (pic) => {
+      try {
+        if (!pic || !pic.data) return FALLBACK_COVER;
+        const bytes = pic.data instanceof Uint8Array ? pic.data : Uint8Array.from(pic.data);
+        let bin = "";
+        const step = 0x8000;
+        for (let i = 0; i < bytes.length; i += step) {
+          bin += String.fromCharCode.apply(null, bytes.subarray(i, i + step));
+        }
+        return "data:" + (pic.format || "image/jpeg") + ";base64," + btoa(bin);
+      } catch (err) {
+        return FALLBACK_COVER;
+      }
+    };
+
+    const readId3 = async (url) => {
+      const api = window.jsmediatags;
+      if (!api || typeof api.read !== "function") return {};
+      let blob = null;
+      try {
+        const res = await fetch(url, { headers: { Range: "bytes=0-262143" } });
+        blob = await res.blob();
+      } catch (err) {
+        return {};
+      }
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = (tags) => { if (!done) { done = true; resolve(tags || {}); } };
+        const timer = setTimeout(() => finish({}), 1500);
+        try {
+          api.read(blob, {
+            onSuccess: (tag) => { clearTimeout(timer); finish(tag.tags || {}); },
+            onError: () => { clearTimeout(timer); finish({}); },
+          });
+        } catch (err) {
+          clearTimeout(timer);
+          finish({});
+        }
+      });
+    };
+
+    const stopNightMusic = () => {
+      if (nightPlayer.instance) nightPlayer.instance.pause();
+    };
+
+    const startNightTrack = () => {
+      const ap = nightPlayer.instance;
+      if (!ap || !ap.list.audios.length) return;
+      const n = ap.list.audios.length;
+      if (nightPlayer.usedNight && n > 1) {
+        ap.list.switch((ap.list.index + 1) % n);
+      } else {
+        ap.seek(0);
+      }
+      nightPlayer.usedNight = true;
+      ap.play();
+    };
+
+    const showArtists = (ap) => {
+      const current = ap.list.audios[ap.list.index] || {};
+      if (ap.template.author) ap.template.author.textContent = current.artist || "";
+      ap.container.querySelectorAll(".aplayer-list-author").forEach((el, i) => {
+        const track = ap.list.audios[i];
+        if (track) el.textContent = track.artist || "";
+      });
+    };
+
+    const resetTrackClock = (ap) => {
+      try {
+        if (ap.audio) ap.audio.currentTime = 0;
+      } catch (err) { /* ignore */ }
+      try { ap.seek(0); } catch (err) { /* ignore */ }
+      const played = ap.container.querySelector(".aplayer-played");
+      const thumb = ap.container.querySelector(".aplayer-thumb");
+      if (played) played.style.width = "0%";
+      if (thumb) thumb.style.left = "0";
+      if (ap.template && ap.template.ptime) ap.template.ptime.textContent = "00:00";
+    };
+
+    const bindNightPlayer = (ap) => {
+      let freshSwitch = false;
+      ap.on("play", () => {
+        if (musicLocked()) ap.pause();
+      });
+      ap.on("listswitch", () => {
+        freshSwitch = true;
+        resetTrackClock(ap);
+        requestAnimationFrame(() => {
+          showArtists(ap);
+          resetTrackClock(ap);
+        });
+      });
+      ap.on("loadedmetadata", () => {
+        if (!freshSwitch) return;
+        freshSwitch = false;
+        resetTrackClock(ap);
+      });
+      showArtists(ap);
+    };
+
+    const mountNightPlayer = (audio) => {
+      const empty = document.getElementById("night-empty");
+      const host = document.getElementById("aplayer");
+      const keep = nightPlayer.instance ? nightPlayer.instance.list.index : 0;
+      empty.hidden = audio.length > 0;
+      if (nightPlayer.instance) {
+        nightPlayer.instance.destroy();
+        nightPlayer.instance = null;
+      }
+      host.innerHTML = "";
+      if (!audio.length || !window.APlayer) return;
+      nightPlayer.instance = new APlayer({
+        container: host,
+        theme: "#e2b13c",
+        loop: "all",
+        order: "list",
+        preload: "metadata",
+        listMaxHeight: "140px",
+        audio,
+      });
+      bindNightPlayer(nightPlayer.instance);
+      nightPlayer.instance.volume(nightPlayer.volume, true);
+      if (keep > 0 && keep < audio.length) nightPlayer.instance.list.switch(keep);
+    };
+
+    const prettyWord = (word) => {
+      if (/^\d{4}$/.test(word)) return word;
+      if (word.length <= 3) return word.toUpperCase();
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    };
+
+    const TRACK_TITLES = [
+      { test: /molchat-doma/i, artist: "Molchat Doma", title: "СУДНО" },
+      { test: /nizkiz-2018|nizkiz.*2018/i, artist: "Nizkiz", title: "Небяспечна" },
+      { test: /nizkiz.*2015|nizkiz-lyrics-video-2015/i, artist: "Nizkiz", title: "Лирика" },
+      { test: /nrm-1999|nrm.*1999/i, artist: "N.R.M.", title: "Ja jedu" },
+      { test: /ytmp3free\.cc_zet|_zet-youtubemp3/i, artist: "ZET", title: "Radzima-svaboda" },
+      { test: /nadzeyea/i, artist: "лайтовы, nadzeyea, Андрей Курс", title: "Хаванкі" },
+    ];
+
+    const inferFromFilename = (file) => {
+      const known = TRACK_TITLES.find((row) => row.test.test(file));
+      if (known) return { artist: known.artist, title: known.title };
+      let stem = file.replace(/\.mp3$/i, "");
+      stem = stem.replace(/^ytmp3free\.cc_/i, "");
+      stem = stem.replace(/-?youtubemp3free\.org$/i, "");
+      const junk = /^(official|audio|music|video|videos|lyrics|lyric|hd|hq|clip|full)$/i;
+      const parts = stem.split(/[-_]+/).map((part) => part.trim()).filter((part) => part && !junk.test(part));
+      if (!parts.length) return { artist: "Unknown artist", title: file.replace(/\.mp3$/i, "") };
+      const words = parts.map(prettyWord);
+      if (/^\d{4}$/.test(parts[parts.length - 1])) {
+        return {
+          artist: words.slice(0, -1).join(" ") || words[0],
+          title: parts[parts.length - 1],
+        };
+      }
+      if (words.length === 1) return { artist: words[0], title: words[0] };
+      return { artist: words[0], title: words.slice(1).join(" ") };
+    };
+
+    const usableTag = (value) => {
+      const text = (value || "").trim();
+      if (!text || /ytmp3|youtubemp3/i.test(text)) return "";
+      return text;
+    };
+
+    const asAudio = (file, tags = {}) => {
+      const inferred = inferFromFilename(file);
+      return {
+        name: usableTag(tags.title) || inferred.title,
+        artist: usableTag(tags.artist) || inferred.artist,
+        url: trackUrl(file),
+        cover: coverFromPic(tags.picture),
+      };
+    };
+
+    const loadTrackList = async () => {
+      if (nightPlayer.loaded) return;
+      nightPlayer.loaded = true;
+      const empty = document.getElementById("night-empty");
+      empty.hidden = false;
+      empty.textContent = t("reading_tracks");
+      let files = [];
+      try {
+        files = await listRemoteTracks();
+      } catch (err) {
+        files = FALLBACK_TRACKS.slice();
+      }
+      for (let i = files.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [files[i], files[j]] = [files[j], files[i]];
+      }
+      empty.textContent = t("upload_mp3");
+      const audio = files.map((file) => asAudio(file));
+      mountNightPlayer(audio);
+      if (state.screen === "roles" || state.screen === "city_sleeps") startNightTrack();
+      files.forEach(async (file, i) => {
+        const tags = await readId3(trackUrl(file));
+        if (!tags.title && !tags.artist && !tags.picture) return;
+        const next = asAudio(file, tags);
+        if (!nightPlayer.instance) return;
+        const cur = nightPlayer.instance.list.audios[i];
+        if (!cur) return;
+        cur.name = next.name;
+        cur.artist = next.artist;
+        cur.cover = next.cover;
+        const playing = !nightPlayer.instance.audio.paused;
+        if (!playing) mountNightPlayer(nightPlayer.instance.list.audios.slice());
+      });
+    };
+
+    const syncNightMusic = () => {
+      const visible = musicVisible();
+      const night = NIGHT_SCREENS.has(state.screen);
+      const wasNight = NIGHT_SCREENS.has(nightPlayer.prevScreen);
+      const box = document.getElementById("night-music");
+      box.hidden = !visible;
+      box.classList.toggle("is-locked", musicLocked());
+      document.querySelector(".shell").classList.toggle("has-night-music", visible);
+      if (wasNight && !night) stopNightMusic();
+      if (visible) loadTrackList();
+      const nightOpens = state.screen === "roles" || state.screen === "city_sleeps";
+      if (nightOpens && !wasNight && nightPlayer.instance) startNightTrack();
+      nightPlayer.prevScreen = state.screen;
+    };
+
+    const setLang = (id) => {
+      if (!I18N[id]) return;
+      if (id !== lang) {
+        lang = id;
+        try { localStorage.setItem("mafia-lang", id); } catch (err) { /* ignore */ }
+      }
+      document.documentElement.lang = lang;
+      document.title = t("app_title");
+      render();
+    };
+
+    const renderLang = () => {
+      const cur = LANGS.find((row) => row.id === lang) || LANGS[0];
+      const bar = document.getElementById("lang-bar");
+      bar.classList.remove("is-open");
+      bar.innerHTML = `
+        <button type="button" class="lang-toggle" id="lang-toggle" aria-expanded="false">
+          ${cur.tag}
+          <svg viewBox="0 0 12 8" aria-hidden="true"><path fill="currentColor" d="M1.2 1.2 6 6l4.8-4.8L12 2.4 6 8 0 2.4z"/></svg>
+        </button>
+        <div class="lang-menu" id="lang-menu" hidden>
+          ${LANGS.map((row) =>
+            `<button type="button" data-lang="${row.id}" class="${row.id === lang ? "is-on" : ""}">${row.tag}</button>`
+          ).join("")}
+        </div>
+      `;
+      const toggle = document.getElementById("lang-toggle");
+      const menu = document.getElementById("lang-menu");
+      const close = () => {
+        bar.classList.remove("is-open");
+        menu.hidden = true;
+        toggle.setAttribute("aria-expanded", "false");
+      };
+      toggle.onclick = (e) => {
+        e.stopPropagation();
+        const open = menu.hidden;
+        if (open) {
+          bar.classList.add("is-open");
+          menu.hidden = false;
+          toggle.setAttribute("aria-expanded", "true");
+        } else close();
+      };
+      menu.querySelectorAll("[data-lang]").forEach((el) => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          setLang(el.dataset.lang);
+        };
+      });
+      const empty = document.getElementById("night-empty");
+      if (empty && !nightPlayer.instance) empty.textContent = t("upload_mp3");
+      const spk = document.getElementById("night-speaker");
+      if (spk) spk.title = nightPlayer.volume > 0 ? t("mute") : t("unmute");
+    };
+
+    const render = () => {
+      const timed = new Set(["mafia_agree", "free_sit", "day_speech", "repeat_speech", "morning_guess", "morning_farewell", "night_don", "night_sheriff"]);
+      if (!timed.has(state.screen) && timer.key) {
+        stopTimer();
+        timer.key = "";
+      }
+      document.title = t("app_title");
+      document.documentElement.lang = lang;
+      renderLang();
+      document.getElementById("view").innerHTML = screens[state.screen]();
+      bindView();
+      renderNav();
+      syncNightMusic();
+    };
+
+    document.addEventListener("click", (e) => {
+      const bar = document.getElementById("lang-bar");
+      if (bar && !bar.contains(e.target)) {
+        bar.classList.remove("is-open");
+        const menu = document.getElementById("lang-menu");
+        const toggle = document.getElementById("lang-toggle");
+        if (menu) menu.hidden = true;
+        if (toggle) toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+    document.body.addEventListener("pointerdown", unlockAudio, { once: true });
+    ensureRoster().catch(() => {});
+    render();
+  </script>
+</body>
+</html>
