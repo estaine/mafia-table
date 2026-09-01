@@ -2,6 +2,7 @@
 <html lang="be">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Стол мафіі</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" />
@@ -1027,7 +1028,6 @@
   <div class="nav" id="nav"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
   <script>
     let roster = [];
 
@@ -1118,12 +1118,17 @@
         over_sheriff: "Шэрыф — гулец {name}",
         proto_day: "Дзень {n}",
         proto_night: "Ноч {n}",
-        proto_hands: "{who} — {n}",
+        proto_hands: "{who} — {n} {votes}",
+        votes_one: "голас",
+        votes_few: "галасы",
+        votes_many: "галасоў",
         proto_out: "Сыходзяць: {names}",
         proto_stay: "Нікога не прыбралі",
         proto_tie: "Нічыя — паўторнае слова",
-        proto_lift: "Пад'ём: {names}",
-        proto_lift_fail: "Пад'ём не прайшоў ({n})",
+        proto_lift_ask: "За пад'ём: {yes}/{live} ({enough})",
+        proto_lift_enough: "дастаткова",
+        proto_lift_short: "недастаткова",
+        proto_lift_none: "Не сыходзіць ніхто",
         proto_no_vote: "Галасавання не было",
         proto_no_noms: "Нікога не выставілі",
         proto_dq: "Выдалены: {who}",
@@ -1259,12 +1264,17 @@
         over_sheriff: "Шериф — гравець {name}",
         proto_day: "День {n}",
         proto_night: "Ніч {n}",
-        proto_hands: "{who} — {n}",
+        proto_hands: "{who} — {n} {votes}",
+        votes_one: "голос",
+        votes_few: "голоси",
+        votes_many: "голосів",
         proto_out: "Йдуть: {names}",
         proto_stay: "Нікого не прибрали",
         proto_tie: "Нічия — повторне слово",
-        proto_lift: "Підйом: {names}",
-        proto_lift_fail: "Підйом не пройшов ({n})",
+        proto_lift_ask: "За підйом: {yes}/{live} ({enough})",
+        proto_lift_enough: "достатньо",
+        proto_lift_short: "недостатньо",
+        proto_lift_none: "Не йде ніхто",
         proto_no_vote: "Голосування не було",
         proto_no_noms: "Нікого не виставили",
         proto_dq: "Видалено: {who}",
@@ -1400,12 +1410,17 @@
         over_sheriff: "Sheriff — player {name}",
         proto_day: "Day {n}",
         proto_night: "Night {n}",
-        proto_hands: "{who} — {n}",
+        proto_hands: "{who} — {n} {votes}",
+        votes_one: "vote",
+        votes_few: "votes",
+        votes_many: "votes",
         proto_out: "Leave: {names}",
         proto_stay: "Nobody left",
         proto_tie: "Tie — extra speech",
-        proto_lift: "Lift: {names}",
-        proto_lift_fail: "Lift failed ({n})",
+        proto_lift_ask: "Lift: {yes}/{live} ({enough})",
+        proto_lift_enough: "enough",
+        proto_lift_short: "not enough",
+        proto_lift_none: "Nobody leaves",
         proto_no_vote: "No vote",
         proto_no_noms: "Nobody nominated",
         proto_dq: "Disqualified: {who}",
@@ -1476,6 +1491,17 @@
         Object.keys(vars).forEach((k) => { s = String(s).split("{" + k + "}").join(String(vars[k])); });
       }
       return s;
+    };
+
+    const votesWord = (n) => {
+      const count = Math.abs(Number(n) || 0);
+      if (lang === "en") return count === 1 ? t("votes_one") : t("votes_many");
+      const m10 = count % 10;
+      const m100 = count % 100;
+      if (m100 >= 11 && m100 <= 14) return t("votes_many");
+      if (m10 === 1) return t("votes_one");
+      if (m10 >= 2 && m10 <= 4) return t("votes_few");
+      return t("votes_many");
     };
 
     const Table = (() => {
@@ -1609,6 +1635,7 @@
           result,
           out: (out || []).slice(),
           liftYes: s.allLeaveYes,
+          live: living(s).length,
         });
       };
 
@@ -1679,9 +1706,10 @@
 
       const afterVoteOut = (s, seats, reason) => {
         const order = nomOrder(s, seats);
+        const speak = order.length ? order : seats.slice();
         seats.forEach((seat) => eliminate(s, seat, reason));
         s.killedTonight = null;
-        s.farewellQueue = order.slice();
+        s.farewellQueue = speak.slice();
         const w = winnerOf(s);
         if (w) {
           s.winner = w;
@@ -1689,7 +1717,7 @@
         } else {
           s.farewellAfter = "night";
         }
-        if (order.length) s.screen = "morning_farewell";
+        if (speak.length) s.screen = "morning_farewell";
         else if (s.farewellAfter === "game_over") s.screen = "game_over";
         else goNight(s);
       };
@@ -1794,8 +1822,8 @@
           afterVoteOut(s, lead, "vote");
           return null;
         }
-        logRound(s, "tie", seats, []);
-        if (!isRepeat) {
+        if (!isRepeat || !sameSet(lead, s.lastLeaderSet)) {
+          logRound(s, "tie", seats, []);
           s.lastLeaderSet = lead.slice();
           s.repeatSeats = lead.slice();
           s.repeatSpeaker = nomOrder(s, lead)[0] || lead[0];
@@ -1805,16 +1833,7 @@
           s.screen = "repeat_speech";
           return null;
         }
-        if (!sameSet(lead, s.lastLeaderSet)) {
-          s.lastLeaderSet = lead.slice();
-          s.repeatSeats = lead.slice();
-          s.repeatSpeaker = nomOrder(s, lead)[0] || lead[0];
-          s.repeatSpoken = [];
-          s.repeatSpeechGap = false;
-          s.repeatConfirmed = false;
-          s.screen = "repeat_speech";
-          return null;
-        }
+        logRound(s, "same_tie", seats, []);
         s.repeatSeats = lead.slice();
         s.allLeaveYes = null;
         s.screen = "all_leave";
@@ -1940,10 +1959,15 @@
             if (!s.miss && s.shoot != null && p(s, s.shoot).alive) {
               eliminate(s, s.shoot, "night");
               s.killedTonight = s.shoot;
+              const w = winnerOf(s);
+              if (w) {
+                s.winner = w;
+                s.farewellAfter = "game_over";
+              }
             } else {
               s.killedTonight = null;
             }
-            if (!checkWin(s)) s.screen = "city_still";
+            s.screen = "city_still";
             break;
           case "city_still":
             applyMorning(s);
@@ -1975,7 +1999,12 @@
               break;
             }
             s.killedTonight = null;
-            beginDay(s);
+            if (s.farewellAfter === "game_over") {
+              s.farewellAfter = null;
+              s.screen = "game_over";
+            } else {
+              beginDay(s);
+            }
             break;
           default:
             break;
@@ -2853,9 +2882,10 @@
       game_over() {
         const who = (seat) => Table.whoRef(state, seat);
         const namesOf = (seats) => seats.map(who).join(", ");
-        const tally = (round) => (round.seats || []).map((seat) =>
-          t("proto_hands", { who: who(seat), n: round.votes[seat] || 0 })
-        ).join(", ");
+        const tally = (round) => (round.seats || []).map((seat) => {
+          const n = round.votes[seat] || 0;
+          return t("proto_hands", { who: who(seat), n, votes: votesWord(n) });
+        }).join(", ");
         const donMark = (row) => row.donResult === "sheriff" ? " 👌" : row.donResult === "not" ? " ❌" : "";
         const sherMark = (row) => row.sheriffResult === "black" ? " 👎" : row.sheriffResult === "red" ? " 👍" : "";
         const roster = state.players.map((pl) =>
@@ -2879,10 +2909,16 @@
             if (!row.rounds.length && !row.dqs.length) lines.push(t("proto_no_vote"));
             row.rounds.forEach((round) => {
               if (round.result === "none") lines.push(t("proto_no_noms"));
-              else if (round.result === "lift") {
-                lines.push(t("proto_lift", { names: namesOf(round.out) }));
-              } else if (round.result === "lift_fail") {
-                lines.push(t("proto_lift_fail", { n: round.liftYes || 0 }));
+              else if (round.result === "lift" || round.result === "lift_fail") {
+                const ok = round.result === "lift";
+                lines.push(t("proto_lift_ask", {
+                  yes: round.liftYes || 0,
+                  live: round.live || 0,
+                  enough: ok ? t("proto_lift_enough") : t("proto_lift_short"),
+                }));
+                lines.push(ok
+                  ? t("proto_out", { names: namesOf(round.out) })
+                  : t("proto_lift_none"));
               } else {
                 if (round.seats.length) lines.push(tally(round));
                 if (round.result === "out") lines.push(t("proto_out", { names: namesOf(round.out) }));
@@ -3161,17 +3197,6 @@
       };
     };
 
-    const FALLBACK_TRACKS = [
-      "ytmp3free.cc_intelligency-august-official-audio-youtubemp3free.org.mp3",
-      "ytmp3free.cc_leibonik-emigrant-song-youtubemp3free.org.mp3",
-      "ytmp3free.cc_molchat-doma-youtubemp3free.org.mp3",
-      "ytmp3free.cc_nadzeyea-official-music-video-youtubemp3free.org.mp3",
-      "ytmp3free.cc_nizkiz-2018-official-music-video-youtubemp3free.org.mp3",
-      "ytmp3free.cc_nizkiz-lyrics-video-2015-youtubemp3free.org.mp3",
-      "ytmp3free.cc_nrm-1999-youtubemp3free.org.mp3",
-      "ytmp3free.cc_zet-youtubemp3free.org.mp3",
-    ];
-
     const trackUrl = (name) =>
       SUPABASE.url + "/storage/v1/object/public/" + SUPABASE.bucket + "/" + encodeURIComponent(name);
 
@@ -3181,24 +3206,17 @@
         .map((row) => row.name);
 
     const listRemoteTracks = async () => {
-      if (SUPABASE.anonKey) {
-        try {
-          const res = await fetch(SUPABASE.url + "/storage/v1/object/list/" + SUPABASE.bucket, {
-            method: "POST",
-            headers: {
-              Authorization: "Bearer " + SUPABASE.anonKey,
-              apikey: SUPABASE.anonKey,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prefix: "", limit: 1000, offset: 0, sortBy: { column: "name", order: "asc" } }),
-          });
-          if (res.ok) {
-            const names = listedMp3s(await res.json());
-            if (names.length) return names;
-          }
-        } catch (err) { /* public files still work even when listing is blocked */ }
-      }
-      return FALLBACK_TRACKS.slice();
+      const res = await fetch(SUPABASE.url + "/storage/v1/object/list/" + SUPABASE.bucket, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + SUPABASE.anonKey,
+          apikey: SUPABASE.anonKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prefix: "", limit: 1000, offset: 0, sortBy: { column: "name", order: "asc" } }),
+      });
+      if (!res.ok) throw new Error("list " + res.status);
+      return listedMp3s(await res.json());
     };
 
     const coverFromPic = (pic) => {
@@ -3216,30 +3234,84 @@
       }
     };
 
-    const readId3 = async (url) => {
-      const api = window.jsmediatags;
-      if (!api || typeof api.read !== "function") return {};
-      let blob = null;
+    const synchsafe = (bytes, i) =>
+      ((bytes[i] & 0x7f) << 21) | ((bytes[i + 1] & 0x7f) << 14) | ((bytes[i + 2] & 0x7f) << 7) | (bytes[i + 3] & 0x7f);
+
+    const decodeId3Text = (bytes) => {
+      if (!bytes.length) return "";
+      const enc = bytes[0];
+      const data = bytes.subarray(1);
+      let text = "";
       try {
-        const res = await fetch(url, { headers: { Range: "bytes=0-262143" } });
-        blob = await res.blob();
+        if (enc === 0) text = new TextDecoder("latin1").decode(data);
+        else if (enc === 3) text = new TextDecoder("utf-8").decode(data);
+        else text = new TextDecoder(enc === 2 ? "utf-16be" : "utf-16").decode(data);
+      } catch (err) {
+        return "";
+      }
+      return text.replace(/\0+$/g, "").trim();
+    };
+
+    const parseId3 = (buf) => {
+      const bytes = new Uint8Array(buf);
+      if (bytes.length < 10 || bytes[0] !== 0x49 || bytes[1] !== 0x44 || bytes[2] !== 0x33) return {};
+      const ver = bytes[3];
+      const end = Math.min(bytes.length, 10 + synchsafe(bytes, 6));
+      let i = 10;
+      const out = {};
+      while (i + 10 <= end) {
+        const id = String.fromCharCode(bytes[i], bytes[i + 1], bytes[i + 2], bytes[i + 3]);
+        if (id === "\0\0\0\0") break;
+        const frameSize = ver === 4
+          ? synchsafe(bytes, i + 4)
+          : ((bytes[i + 4] << 24) | (bytes[i + 5] << 16) | (bytes[i + 6] << 8) | bytes[i + 7]) >>> 0;
+        if (!frameSize || i + 10 + frameSize > bytes.length) break;
+        const payload = bytes.subarray(i + 10, i + 10 + frameSize);
+        if (id === "TIT2") out.title = decodeId3Text(payload);
+        else if (id === "TPE1") out.artist = decodeId3Text(payload);
+        if (out.title && out.artist) break;
+        i += 10 + frameSize;
+      }
+      return out;
+    };
+
+    const concatChunks = (chunks, total) => {
+      const out = new Uint8Array(total);
+      let off = 0;
+      chunks.forEach((chunk) => { out.set(chunk, off); off += chunk.length; });
+      return out.buffer;
+    };
+
+    const readHead = async (url, n) => {
+      try {
+        const ranged = await fetch(url, { cache: "no-store", headers: { Range: "bytes=0-" + (n - 1) } });
+        if (ranged.ok || ranged.status === 206) {
+          const buf = await ranged.arrayBuffer();
+          if (buf.byteLength) return buf;
+        }
+      } catch (err) { /* some webviews reject Range */ }
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok || !res.body || !res.body.getReader) return res.ok ? res.arrayBuffer() : null;
+      const reader = res.body.getReader();
+      const chunks = [];
+      let total = 0;
+      while (total < n) {
+        const step = await reader.read();
+        if (step.done) break;
+        chunks.push(step.value);
+        total += step.value.length;
+      }
+      try { reader.cancel(); } catch (err) { /* ignore */ }
+      return concatChunks(chunks, total);
+    };
+
+    const readId3 = async (url) => {
+      try {
+        const buf = await readHead(url, 65536);
+        return buf ? parseId3(buf) : {};
       } catch (err) {
         return {};
       }
-      return new Promise((resolve) => {
-        let done = false;
-        const finish = (tags) => { if (!done) { done = true; resolve(tags || {}); } };
-        const timer = setTimeout(() => finish({}), 1500);
-        try {
-          api.read(blob, {
-            onSuccess: (tag) => { clearTimeout(timer); finish(tag.tags || {}); },
-            onError: () => { clearTimeout(timer); finish({}); },
-          });
-        } catch (err) {
-          clearTimeout(timer);
-          finish({});
-        }
-      });
     };
 
     const stopNightMusic = () => {
@@ -3259,12 +3331,17 @@
       ap.play();
     };
 
-    const showArtists = (ap) => {
+    const paintTrackLabels = (ap) => {
       const current = ap.list.audios[ap.list.index] || {};
+      if (ap.template.title) ap.template.title.textContent = current.name || "";
       if (ap.template.author) ap.template.author.textContent = current.artist || "";
+      ap.container.querySelectorAll(".aplayer-list-title").forEach((el, i) => {
+        const track = ap.list.audios[i];
+        if (track && track.name) el.textContent = track.name;
+      });
       ap.container.querySelectorAll(".aplayer-list-author").forEach((el, i) => {
         const track = ap.list.audios[i];
-        if (track) el.textContent = track.artist || "";
+        if (track && track.artist) el.textContent = track.artist;
       });
     };
 
@@ -3289,7 +3366,7 @@
         freshSwitch = true;
         resetTrackClock(ap);
         requestAnimationFrame(() => {
-          showArtists(ap);
+          paintTrackLabels(ap);
           resetTrackClock(ap);
         });
       });
@@ -3298,7 +3375,7 @@
         freshSwitch = false;
         resetTrackClock(ap);
       });
-      showArtists(ap);
+      paintTrackLabels(ap);
     };
 
     const mountNightPlayer = (audio) => {
@@ -3326,56 +3403,18 @@
       if (keep > 0 && keep < audio.length) nightPlayer.instance.list.switch(keep);
     };
 
-    const prettyWord = (word) => {
-      if (/^\d{4}$/.test(word)) return word;
-      if (word.length <= 3) return word.toUpperCase();
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-    };
-
-    const TRACK_TITLES = [
-      { test: /molchat-doma/i, artist: "Molchat Doma", title: "СУДНО" },
-      { test: /nizkiz-2018|nizkiz.*2018/i, artist: "Nizkiz", title: "Небяспечна" },
-      { test: /nizkiz.*2015|nizkiz-lyrics-video-2015/i, artist: "Nizkiz", title: "Лирика" },
-      { test: /nrm-1999|nrm.*1999/i, artist: "N.R.M.", title: "Ja jedu" },
-      { test: /ytmp3free\.cc_zet|_zet-youtubemp3/i, artist: "ZET", title: "Radzima-svaboda" },
-      { test: /nadzeyea/i, artist: "лайтовы, nadzeyea, Андрей Курс", title: "Хаванкі" },
-    ];
-
-    const inferFromFilename = (file) => {
-      const known = TRACK_TITLES.find((row) => row.test.test(file));
-      if (known) return { artist: known.artist, title: known.title };
-      let stem = file.replace(/\.mp3$/i, "");
-      stem = stem.replace(/^ytmp3free\.cc_/i, "");
-      stem = stem.replace(/-?youtubemp3free\.org$/i, "");
-      const junk = /^(official|audio|music|video|videos|lyrics|lyric|hd|hq|clip|full)$/i;
-      const parts = stem.split(/[-_]+/).map((part) => part.trim()).filter((part) => part && !junk.test(part));
-      if (!parts.length) return { artist: "Unknown artist", title: file.replace(/\.mp3$/i, "") };
-      const words = parts.map(prettyWord);
-      if (/^\d{4}$/.test(parts[parts.length - 1])) {
-        return {
-          artist: words.slice(0, -1).join(" ") || words[0],
-          title: parts[parts.length - 1],
-        };
-      }
-      if (words.length === 1) return { artist: words[0], title: words[0] };
-      return { artist: words[0], title: words.slice(1).join(" ") };
-    };
-
     const usableTag = (value) => {
       const text = (value || "").trim();
       if (!text || /ytmp3|youtubemp3/i.test(text)) return "";
       return text;
     };
 
-    const asAudio = (file, tags = {}) => {
-      const inferred = inferFromFilename(file);
-      return {
-        name: usableTag(tags.title) || inferred.title,
-        artist: usableTag(tags.artist) || inferred.artist,
-        url: trackUrl(file),
-        cover: coverFromPic(tags.picture),
-      };
-    };
+    const asAudio = (file, tags = {}) => ({
+      name: usableTag(tags.title) || "—",
+      artist: usableTag(tags.artist) || "—",
+      url: trackUrl(file),
+      cover: coverFromPic(tags.picture),
+    });
 
     const loadTrackList = async () => {
       if (nightPlayer.loaded) return;
@@ -3387,29 +3426,19 @@
       try {
         files = await listRemoteTracks();
       } catch (err) {
-        files = FALLBACK_TRACKS.slice();
+        files = [];
       }
       for (let i = files.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [files[i], files[j]] = [files[j], files[i]];
       }
+      const audio = await Promise.all(files.map(async (file) => {
+        const tags = await readId3(trackUrl(file));
+        return asAudio(file, tags);
+      }));
       empty.textContent = t("upload_mp3");
-      const audio = files.map((file) => asAudio(file));
       mountNightPlayer(audio);
       if (state.screen === "roles" || state.screen === "city_sleeps") startNightTrack();
-      files.forEach(async (file, i) => {
-        const tags = await readId3(trackUrl(file));
-        if (!tags.title && !tags.artist && !tags.picture) return;
-        const next = asAudio(file, tags);
-        if (!nightPlayer.instance) return;
-        const cur = nightPlayer.instance.list.audios[i];
-        if (!cur) return;
-        cur.name = next.name;
-        cur.artist = next.artist;
-        cur.cover = next.cover;
-        const playing = !nightPlayer.instance.audio.paused;
-        if (!playing) mountNightPlayer(nightPlayer.instance.list.audios.slice());
-      });
     };
 
     const syncNightMusic = () => {
