@@ -1132,6 +1132,7 @@
         proto_don: "Дон: {who}",
         proto_sher: "Шэрыф: {who}",
         proto_none: "—",
+        proto_best_move: "Лепшы ход: {seats} — {hits}/{total}",
         start: "Старт",
         thats_it: "Канец",
         nominate: "Выставіць",
@@ -1272,6 +1273,7 @@
         proto_don: "Дон: {who}",
         proto_sher: "Шериф: {who}",
         proto_none: "—",
+        proto_best_move: "Найкращий хід: {seats} — {hits}/{total}",
         start: "Старт",
         thats_it: "Кінець",
         nominate: "Виставити",
@@ -1412,6 +1414,7 @@
         proto_don: "Don: {who}",
         proto_sher: "Sheriff: {who}",
         proto_none: "—",
+        proto_best_move: "Best move: {seats} — {hits}/{total}",
         start: "Start",
         thats_it: "End",
         nominate: "Nominate",
@@ -1517,6 +1520,7 @@
         sheriffResult: null,
         morningGuess: [],
         killedTonight: null,
+        bestMove: null,
         winner: null,
         protocol: [],
       });
@@ -1945,6 +1949,19 @@
             applyMorning(s);
             break;
           case "morning_guess":
+            s.bestMove = {
+              seat: s.killedTonight,
+              guesses: (s.morningGuess || []).slice(),
+            };
+            if (s.protocol) {
+              for (let i = s.protocol.length - 1; i >= 0; i--) {
+                const row = s.protocol[i];
+                if (row.kind === "night" && row.n === 1) {
+                  row.guesses = s.bestMove.guesses.slice();
+                  break;
+                }
+              }
+            }
             s.screen = "morning_farewell";
             break;
           case "morning_farewell":
@@ -2844,6 +2861,18 @@
         const roster = state.players.map((pl) =>
           `${pl.seat} ${Table.nameOf(pl)} — ${Table.label(pl.role)}`
         ).join("<br />");
+        const bestNote = (guesses) => {
+          if (!guesses || !guesses.length) return "";
+          const hits = guesses.filter((seat) => {
+            const whoPl = Table.p(state, seat);
+            return whoPl && Table.isBlack(whoPl.role);
+          }).length;
+          return " (" + t("proto_best_move", {
+            seats: guesses.join(" "),
+            hits,
+            total: guesses.length,
+          }) + ")";
+        };
         const blocks = (state.protocol || []).map((row) => {
           if (row.kind === "day") {
             const lines = [];
@@ -2869,7 +2898,11 @@
               </div>
             `;
           }
-          const shot = row.miss ? t("proto_miss") : t("proto_shot", { who: who(row.shoot) });
+          const guesses = row.guesses || (row.n === 1 && state.bestMove && state.bestMove.seat === row.shoot
+            ? state.bestMove.guesses : null);
+          const shot = row.miss
+            ? t("proto_miss")
+            : t("proto_shot", { who: who(row.shoot) }) + bestNote(guesses);
           const don = t("proto_don", { who: row.don != null ? who(row.don) + donMark(row) : t("proto_none") });
           const sher = t("proto_sher", { who: row.sheriff != null ? who(row.sheriff) + sherMark(row) : t("proto_none") });
           return `
