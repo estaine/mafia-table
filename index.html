@@ -397,6 +397,33 @@
       max-width: 34rem;
     }
 
+    .proto {
+      margin-top: 0.4rem;
+      max-width: 42rem;
+    }
+
+    .proto-roster {
+      margin: 0 0 1.3rem;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+
+    .proto-block { margin: 0 0 1.1rem; }
+
+    .proto-h {
+      margin: 0 0 0.35rem;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+    }
+
+    .proto-line {
+      margin: 0.2rem 0;
+      color: var(--ink);
+      line-height: 1.4;
+    }
+
     .content { flex: 1; }
 
     .clock {
@@ -826,6 +853,15 @@
       color: var(--muted);
     }
 
+    .ballot.is-closed {
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .ballot.is-closed .empty {
+      color: var(--ink);
+    }
+
     .main-act {
       width: 100%;
       margin: 0.8rem 0 1.1rem;
@@ -1080,6 +1116,22 @@
         over_mafia_one: "Мафія — гулец {names}",
         over_don: "Дон — гулец {name}",
         over_sheriff: "Шэрыф — гулец {name}",
+        proto_day: "Дзень {n}",
+        proto_night: "Ноч {n}",
+        proto_hands: "{who} — {n}",
+        proto_out: "Сыходзяць: {names}",
+        proto_stay: "Нікога не прыбралі",
+        proto_tie: "Нічыя — паўторнае слова",
+        proto_lift: "Пад'ём: {names}",
+        proto_lift_fail: "Пад'ём не прайшоў ({n})",
+        proto_no_vote: "Галасавання не было",
+        proto_no_noms: "Нікога не выставілі",
+        proto_dq: "Выдалены: {who}",
+        proto_shot: "Стрэл: {who}",
+        proto_miss: "Стрэл: ❌",
+        proto_don: "Дон: {who}",
+        proto_sher: "Шэрыф: {who}",
+        proto_none: "—",
         start: "Старт",
         thats_it: "Канец",
         nominate: "Выставіць",
@@ -1118,6 +1170,7 @@
         out_fouls: "фолы",
         out_night: "ноч",
         no_one_nominated: "Нікога не выставілі.",
+        no_vote_dq: "Гулец выдалены — галасавання не будзе",
         skip_title: "Прапускае наступнае слова",
         upload_mp3: "Загрузіце .mp3 у бакет music на Supabase і абнавіце старонку.",
         mute: "Выключыць гук",
@@ -1203,6 +1256,22 @@
         over_mafia_one: "Мафія — гравець {names}",
         over_don: "Дон — гравець {name}",
         over_sheriff: "Шериф — гравець {name}",
+        proto_day: "День {n}",
+        proto_night: "Ніч {n}",
+        proto_hands: "{who} — {n}",
+        proto_out: "Йдуть: {names}",
+        proto_stay: "Нікого не прибрали",
+        proto_tie: "Нічия — повторне слово",
+        proto_lift: "Підйом: {names}",
+        proto_lift_fail: "Підйом не пройшов ({n})",
+        proto_no_vote: "Голосування не було",
+        proto_no_noms: "Нікого не виставили",
+        proto_dq: "Видалено: {who}",
+        proto_shot: "Постріл: {who}",
+        proto_miss: "Постріл: ❌",
+        proto_don: "Дон: {who}",
+        proto_sher: "Шериф: {who}",
+        proto_none: "—",
         start: "Старт",
         thats_it: "Кінець",
         nominate: "Виставити",
@@ -1241,6 +1310,7 @@
         out_fouls: "фоли",
         out_night: "ніч",
         no_one_nominated: "Нікого не виставили.",
+        no_vote_dq: "Гравця видалено — голосування не буде",
         skip_title: "Пропускає наступне слово",
         upload_mp3: "Завантажте .mp3 у бакет music на Supabase і оновіть сторінку.",
         mute: "Вимкнути звук",
@@ -1326,6 +1396,22 @@
         over_mafia_one: "Mafia — player {names}",
         over_don: "Don — player {name}",
         over_sheriff: "Sheriff — player {name}",
+        proto_day: "Day {n}",
+        proto_night: "Night {n}",
+        proto_hands: "{who} — {n}",
+        proto_out: "Leave: {names}",
+        proto_stay: "Nobody left",
+        proto_tie: "Tie — extra speech",
+        proto_lift: "Lift: {names}",
+        proto_lift_fail: "Lift failed ({n})",
+        proto_no_vote: "No vote",
+        proto_no_noms: "Nobody nominated",
+        proto_dq: "Disqualified: {who}",
+        proto_shot: "Shot: {who}",
+        proto_miss: "Shot: ❌",
+        proto_don: "Don: {who}",
+        proto_sher: "Sheriff: {who}",
+        proto_none: "—",
         start: "Start",
         thats_it: "End",
         nominate: "Nominate",
@@ -1364,6 +1450,7 @@
         out_fouls: "fouls",
         out_night: "night",
         no_one_nominated: "No one is nominated.",
+        no_vote_dq: "A player is out — there will be no vote",
         skip_title: "Skips next speech",
         upload_mp3: "Upload .mp3 files to the Supabase music bucket, then refresh.",
         mute: "Mute",
@@ -1416,6 +1503,7 @@
         voteCursor: 0,
         voteAutoFrom: null,
         voteAborted: false,
+        dayFoulOut: false,
         lastLeaderSet: null,
         repeatSeats: [],
         allLeaveYes: null,
@@ -1430,6 +1518,7 @@
         morningGuess: [],
         killedTonight: null,
         winner: null,
+        protocol: [],
       });
 
       const p = (s, seat) => s.players.find((x) => x.seat === seat);
@@ -1494,6 +1583,45 @@
         pl.outReason = reason;
       };
 
+      const whoRef = (s, seat) => {
+        const pl = p(s, seat);
+        return pl ? pl.seat + " " + nameOf(pl) : String(seat);
+      };
+
+      const ensureDayLog = (s) => {
+        if (!s.protocol) s.protocol = [];
+        for (let i = s.protocol.length - 1; i >= 0; i--) {
+          if (s.protocol[i].kind === "day" && s.protocol[i].n === s.dayNumber) return s.protocol[i];
+        }
+        const row = { kind: "day", n: s.dayNumber, rounds: [], dqs: [] };
+        s.protocol.push(row);
+        return row;
+      };
+
+      const logRound = (s, result, seats, out) => {
+        ensureDayLog(s).rounds.push({
+          seats: (seats || []).slice(),
+          votes: { ...(s.votes || {}) },
+          result,
+          out: (out || []).slice(),
+          liftYes: s.allLeaveYes,
+        });
+      };
+
+      const logNight = (s) => {
+        if (!s.protocol) s.protocol = [];
+        s.protocol.push({
+          kind: "night",
+          n: s.dayNumber,
+          miss: !!(s.miss || s.shoot == null),
+          shoot: s.shoot,
+          don: s.donCheck,
+          donResult: s.donResult,
+          sheriff: s.sheriffCheck,
+          sheriffResult: s.sheriffResult,
+        });
+      };
+
       const fillNames = (s) => {
         s.players.forEach((pl) => { if (!pl.name.trim()) pl.name = t("player_n", { n: pl.seat }); });
       };
@@ -1512,6 +1640,7 @@
         s.voteCursor = 0;
         s.voteAutoFrom = null;
         s.voteAborted = false;
+        s.dayFoulOut = false;
         s.lastLeaderSet = null;
         s.repeatSeats = [];
         s.allLeaveYes = null;
@@ -1609,7 +1738,9 @@
         s.history = history;
         if (s.voteCursor == null) s.voteCursor = 0;
         if (s.voteAborted == null) s.voteAborted = false;
+        if (s.dayFoulOut == null) s.dayFoulOut = false;
         if (!s.farewellQueue) s.farewellQueue = [];
+        if (!s.protocol) s.protocol = [];
         return s;
       };
 
@@ -1645,14 +1776,21 @@
         if (!lead.length) return t("need_one_vote");
         if (seats.length === 1 && !isRepeat) {
           const need = majority(living(s).length);
-          if ((s.votes[seats[0]] || 0) >= need) afterVoteOut(s, seats, "vote");
-          else goNight(s);
+          if ((s.votes[seats[0]] || 0) >= need) {
+            logRound(s, "out", seats, seats);
+            afterVoteOut(s, seats, "vote");
+          } else {
+            logRound(s, "stay", seats, []);
+            goNight(s);
+          }
           return null;
         }
         if (lead.length === 1) {
+          logRound(s, "out", seats, lead);
           afterVoteOut(s, lead, "vote");
           return null;
         }
+        logRound(s, "tie", seats, []);
         if (!isRepeat) {
           s.lastLeaderSet = lead.slice();
           s.repeatSeats = lead.slice();
@@ -1716,7 +1854,8 @@
         if (blocked) return s;
 
         if (s.voteAborted && isVotePhase(s)) {
-          goNight(s);
+          ensureDayLog(s);
+          if (!checkWin(s)) goNight(s);
           return s;
         }
 
@@ -1739,6 +1878,11 @@
             beginDay(s);
             break;
           case "day_speech":
+            if (s.dayFoulOut) {
+              ensureDayLog(s);
+              if (!checkWin(s)) goNight(s);
+              break;
+            }
             s.votes = {};
             s.voteCursor = 0;
             s.voteAutoFrom = null;
@@ -1746,8 +1890,10 @@
             break;
           case "day_voting": {
             const noms = livingNoms(s);
-            if (!noms.length) goNight(s);
-            else {
+            if (!noms.length) {
+              logRound(s, "none", [], []);
+              goNight(s);
+            } else {
               const err = resolveVote(s, noms, false);
               if (err) return s;
             }
@@ -1767,8 +1913,13 @@
           }
           case "all_leave": {
             const seats = s.repeatSeats.filter((seat) => p(s, seat).alive);
-            if (s.allLeaveYes >= majority(living(s).length)) afterVoteOut(s, seats, "vote");
-            else goNight(s);
+            if (s.allLeaveYes >= majority(living(s).length)) {
+              logRound(s, "lift", seats, seats);
+              afterVoteOut(s, seats, "vote");
+            } else {
+              logRound(s, "lift_fail", seats, []);
+              goNight(s);
+            }
             break;
           }
           case "city_sleeps":
@@ -1781,6 +1932,7 @@
             s.screen = "night_sheriff";
             break;
           case "night_sheriff":
+            logNight(s);
             if (!s.miss && s.shoot != null && p(s, s.shoot).alive) {
               eliminate(s, s.shoot, "night");
               s.killedTonight = s.shoot;
@@ -1905,13 +2057,23 @@
             if (n >= 3 && n < 4) pl.skipNextSpeech = true;
             if (n < 3) pl.skipNextSpeech = false;
             if (n >= 4 && pl.alive) {
+              const onDay = next.screen === "day_speech" || isVotePhase(next);
+              if (onDay) ensureDayLog(next).dqs.push(action.seat);
               eliminate(next, action.seat, "fouls");
+              if (checkWin(next)) break;
+              if (onDay) next.dayFoulOut = true;
               if (isVotePhase(next)) next.voteAborted = true;
-              checkWin(next);
             } else if (n < 4 && foulOut) {
               pl.alive = true;
               pl.outReason = null;
               next.winner = null;
+              if (next.protocol) {
+                next.protocol.forEach((row) => {
+                  if (row.kind === "day" && row.dqs) {
+                    row.dqs = row.dqs.filter((seat) => seat !== action.seat);
+                  }
+                });
+              }
               if (next.screen === "game_over") next.screen = "day_speech";
             }
             break;
@@ -1919,7 +2081,7 @@
           case "NOMINATE": {
             const pl = p(next, action.seat);
             const speaker = next.speaker;
-            if (next.screen !== "day_speech" || next.speechesConfirmed || !pl || !pl.alive) break;
+            if (next.screen !== "day_speech" || next.speechesConfirmed || next.dayFoulOut || !pl || !pl.alive) break;
             if (speaker == null || next.nominatedBy[speaker] != null) break;
             if (next.nominations.includes(action.seat)) break;
             next.nominations.push(action.seat);
@@ -1927,7 +2089,7 @@
             break;
           }
           case "DROP_NOM": {
-            if (next.screen !== "day_speech" || next.speechesConfirmed) break;
+            if (next.screen !== "day_speech" || next.speechesConfirmed || next.dayFoulOut) break;
             if (!next.nominations.includes(action.seat)) break;
             next.nominations = next.nominations.filter((seat) => seat !== action.seat);
             Object.keys(next.nominatedBy).forEach((who) => {
@@ -2074,7 +2236,7 @@
       };
 
       return {
-        create, reduce, canGo, voteCall, living, nameOf, label, remainingRoles,
+        create, reduce, canGo, voteCall, living, nameOf, label, whoRef, remainingRoles,
         nextLiving, nextUnspoken, speechesOver, repeatSpeechesOver, nextRepeatUnspoken, p, isRed, isBlack, majority, nomOrder, leadersOf, livingNoms, votingSeats, skipsSpeech,
       };
     })();
@@ -2212,7 +2374,15 @@
         `;
       }).join("");
 
-    const ballotHtml = (seats, kind, current, { picked, droppable } = {}) => {
+    const ballotHtml = (seats, kind, current, { picked, droppable, closed } = {}) => {
+      if (closed) {
+        return `
+          <div class="ballot is-closed">
+            <p class="kind">${kind}</p>
+            <p class="empty">${t("no_vote_dq")}</p>
+          </div>
+        `;
+      }
       if (!seats.length) {
         return `
           <div class="ballot">
@@ -2308,7 +2478,7 @@
         const nominated = state.nominations.includes(pl.seat);
         const framed = Array.isArray(frame) ? frame.includes(pl.seat) : nominated;
         const speakerHasNom = state.nominatedBy[state.speaker] != null;
-        const allowNom = nom && pl.alive && !state.speechesConfirmed && !speakerHasNom && !nominated;
+        const allowNom = nom && pl.alive && !state.speechesConfirmed && !state.dayFoulOut && !speakerHasNom && !nominated;
         return `
           <div class="player-row ${pl.alive ? "" : "dead"} ${highlight === pl.seat ? "speak" : ""} ${framed && highlight !== pl.seat ? "nom" : ""} ${canFoul ? "foulable" : ""}" ${canFoul ? `data-foul-add="${pl.seat}"` : ""}>
             <div class="n">${pl.seat}</div>
@@ -2436,7 +2606,8 @@
           <p class="lede">${skip ? t("skip_lede") : t("foul_lede")}</p>
           ${ballotHtml(Table.livingNoms(state), t("first_vote"), null, {
             picked: state.nominatedBy[state.speaker],
-            droppable: !done,
+            droppable: !done && !state.dayFoulOut,
+            closed: state.dayFoulOut,
           })}
           ${playerRows({ foul: true, nom: !done, highlight: done ? null : state.speaker })}
         `;
@@ -2445,6 +2616,16 @@
       day_voting() {
         const noms = Table.livingNoms(state);
         const current = noms[state.voteCursor];
+        if (state.dayFoulOut) {
+          return `
+            <p class="kicker">${t("day_vote", { n: state.dayNumber })}</p>
+            <h1>${t("hands_each")}</h1>
+            ${ballotHtml(noms, t("first_vote"), current, { closed: true })}
+            <div class="call">${t("no_vote_dq")}</div>
+            <p class="lede">${t("foul_lede")}</p>
+            ${playerRows({ foul: true, nom: false })}
+          `;
+        }
         if (!noms.length) {
           return `
             <p class="kicker">${t("day_vote", { n: state.dayNumber })}</p>
@@ -2494,7 +2675,7 @@
             disabled: done,
           })}
           <p class="lede">${t("foul_lede")}</p>
-          ${ballotHtml(order, t("another_word"), done ? null : seat)}
+          ${ballotHtml(order, t("another_word"), done ? null : seat, { closed: state.dayFoulOut })}
           ${playerRows({ foul: true, nom: false, highlight: done ? null : seat, frame: order })}
         `;
       },
@@ -2505,8 +2686,8 @@
         return `
           <p class="kicker">${t("vote_again", { n: state.dayNumber })}</p>
           <h1>${t("hands_once")}</h1>
-          ${ballotHtml(seats, t("repeat_noms"), current)}
-          ${voteRowsHtml(seats)}
+          ${ballotHtml(seats, t("repeat_noms"), current, { closed: state.dayFoulOut })}
+          ${state.dayFoulOut ? "" : voteRowsHtml(seats)}
           <div class="call">${Table.voteCall(state)}</div>
           <p class="lede">${t("foul_lede")}</p>
           ${playerRows({ foul: true, nom: false })}
@@ -2519,13 +2700,13 @@
           <p class="kicker">${t("lift_kicker", { n: state.dayNumber })}</p>
           <h1>${t("do_they_all")}</h1>
           <p class="lede">${t("half_yes", { need })}</p>
-          ${ballotHtml(Table.nomOrder(state, state.repeatSeats), t("last_question"))}
-          <div class="vote-row current">
+          ${ballotHtml(Table.nomOrder(state, state.repeatSeats), t("last_question"), null, { closed: state.dayFoulOut })}
+          ${state.dayFoulOut ? "" : `<div class="vote-row current">
             <div class="who">${t("yes")}</div>
             <div class="vote-picks">${Array.from({ length: Table.living(state).length + 1 }, (_, n) =>
               `<button type="button" data-leave="${n}" class="${state.allLeaveYes === n ? "primary" : ""}">${n}</button>`
             ).join("")}</div>
-          </div>
+          </div>`}
           ${Table.voteCall(state) ? `<div class="call">${Table.voteCall(state)}</div>` : ""}
           <p class="lede">${t("foul_lede")}</p>
           ${playerRows({ foul: true, nom: false })}
@@ -2653,24 +2834,60 @@
       },
 
       game_over() {
-        const joinNames = (names) => {
-          if (!names.length) return "—";
-          if (names.length === 1) return names[0];
-          if (names.length === 2) return names[0] + " " + t("and") + " " + names[1];
-          return names.slice(0, -1).join(", ") + " " + t("and") + " " + names[names.length - 1];
-        };
-        const mafia = state.players.filter((pl) => pl.role === "mafia").map((pl) => Table.nameOf(pl));
-        const don = state.players.find((pl) => pl.role === "don");
-        const sheriff = state.players.find((pl) => pl.role === "sheriff");
-        const summary = [
-          t(mafia.length === 1 ? "over_mafia_one" : "over_mafia", { names: joinNames(mafia) }),
-          t("over_don", { name: don ? Table.nameOf(don) : "—" }),
-          t("over_sheriff", { name: sheriff ? Table.nameOf(sheriff) : "—" }),
-        ].join("<br />");
+        const who = (seat) => Table.whoRef(state, seat);
+        const namesOf = (seats) => seats.map(who).join(", ");
+        const tally = (round) => (round.seats || []).map((seat) =>
+          t("proto_hands", { who: who(seat), n: round.votes[seat] || 0 })
+        ).join(", ");
+        const donMark = (row) => row.donResult === "sheriff" ? " 👌" : row.donResult === "not" ? " ❌" : "";
+        const sherMark = (row) => row.sheriffResult === "black" ? " 👎" : row.sheriffResult === "red" ? " 👍" : "";
+        const roster = state.players.map((pl) =>
+          `${pl.seat} ${Table.nameOf(pl)} — ${Table.label(pl.role)}`
+        ).join("<br />");
+        const blocks = (state.protocol || []).map((row) => {
+          if (row.kind === "day") {
+            const lines = [];
+            if (!row.rounds.length && !row.dqs.length) lines.push(t("proto_no_vote"));
+            row.rounds.forEach((round) => {
+              if (round.result === "none") lines.push(t("proto_no_noms"));
+              else if (round.result === "lift") {
+                lines.push(t("proto_lift", { names: namesOf(round.out) }));
+              } else if (round.result === "lift_fail") {
+                lines.push(t("proto_lift_fail", { n: round.liftYes || 0 }));
+              } else {
+                if (round.seats.length) lines.push(tally(round));
+                if (round.result === "out") lines.push(t("proto_out", { names: namesOf(round.out) }));
+                else if (round.result === "stay") lines.push(t("proto_stay"));
+                else if (round.result === "tie") lines.push(t("proto_tie"));
+              }
+            });
+            (row.dqs || []).forEach((seat) => lines.push(t("proto_dq", { who: who(seat) })));
+            return `
+              <div class="proto-block">
+                <p class="proto-h">${t("proto_day", { n: row.n })}</p>
+                ${lines.map((line) => `<p class="proto-line">${line}</p>`).join("")}
+              </div>
+            `;
+          }
+          const shot = row.miss ? t("proto_miss") : t("proto_shot", { who: who(row.shoot) });
+          const don = t("proto_don", { who: row.don != null ? who(row.don) + donMark(row) : t("proto_none") });
+          const sher = t("proto_sher", { who: row.sheriff != null ? who(row.sheriff) + sherMark(row) : t("proto_none") });
+          return `
+            <div class="proto-block">
+              <p class="proto-h">${t("proto_night", { n: row.n })}</p>
+              <p class="proto-line">${shot}</p>
+              <p class="proto-line">${don}</p>
+              <p class="proto-line">${sher}</p>
+            </div>
+          `;
+        }).join("");
         return `
           <p class="kicker">${t("table_over")}</p>
           <h1>${state.winner === "town" ? t("city_holds") : t("mafia_takes")}</h1>
-          <p class="lede">${summary}</p>
+          <div class="proto">
+            <p class="proto-roster">${roster}</p>
+            ${blocks}
+          </div>
         `;
       },
     };
@@ -2741,9 +2958,7 @@
       const backOff = !state.history.length && !voteStepBack;
       const hideNext =
         (state.screen === "day_speech" && !state.speechesConfirmed) ||
-        (state.screen === "repeat_speech" && !state.repeatConfirmed && !state.voteAborted) ||
-        (state.screen === "night_don" && roleGone("don") && timer.left > 0) ||
-        (state.screen === "night_sheriff" && roleGone("sheriff") && timer.left > 0);
+        (state.screen === "repeat_speech" && !state.repeatConfirmed && !state.voteAborted);
       const liftPending = state.screen === "all_leave" && state.allLeaveYes == null && !state.voteAborted;
       const why = hideNext || liftPending ? null : Table.canGo(state);
       const nextLabel = state.screen === "game_over" ? t("new_table") : t("next");
